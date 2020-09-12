@@ -28,12 +28,13 @@ func run() {
 	for !win.Closed() {
 		win.Clear(colornames.Black)
 		basicTxt := text.New(pixel.V(100, 500), basicAtlas)
+
 		for i := 0; i < 6; i++ {
-			fmt.Fprint(basicTxt, "Dot: ", basicTxt.Dot, ", ")
+			basicTxt.Orig.X += 10
+			basicTxt.Orig.Y += 9000
+			fmt.Fprintln(basicTxt, "Orig:", basicTxt.Orig, "Dot:", basicTxt.Dot)
+			// After (!) each line written text.Dot takes the X coordinate of text.Orig
 		}
-		fmt.Fprintln(basicTxt, "Dot:", basicTxt.Dot)
-		fmt.Fprint(basicTxt, "Dot: ", basicTxt.Dot, ", ")
-		fmt.Fprintln(basicTxt, "Dot:", basicTxt.Dot)
 		basicTxt.Draw(win, pixel.IM.Scaled(basicTxt.Orig, 1))
 		win.Update()
 	}
