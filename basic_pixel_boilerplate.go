@@ -3,8 +3,15 @@
 package main
 
 import (
+	"time"
+
+	"github.com/faiface/beep/speaker"
+	"github.com/faiface/beep/vorbis"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+
+	"log"
+	"os"
 )
 
 func run() {
@@ -18,6 +25,18 @@ func run() {
 		panic(err)
 	}
 
+	f, err := os.Open("track1.ogg")
+	if err != nil {
+		log.Fatal(err)
+	}
+	streamer, format, err := vorbis.Decode(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer streamer.Close()
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	speaker.Play(streamer)
+
 	for !win.Closed() {
 		win.Update()
 	}
@@ -25,4 +44,5 @@ func run() {
 
 func main() {
 	pixelgl.Run(run)
+
 }
