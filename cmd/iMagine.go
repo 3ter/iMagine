@@ -38,18 +38,7 @@ func loadTTF(path string, size float64) (font.Face, error) {
 	}), nil
 }
 
-func run() {
-	cfg := pixelgl.WindowConfig{
-		Title:  "Pixel Rocks!",
-		Bounds: pixel.R(0, 0, 1024, 768),
-		// VSync:  true,
-	}
-	win, err := pixelgl.NewWindow(cfg)
-	if err != nil {
-		panic(err)
-	}
-	win.SetSmooth(true) // remove potential artifacts
-
+func gameloop(win *pixelgl.Window) {
 	face, err := loadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
@@ -62,7 +51,7 @@ func run() {
 
 	for !win.Closed() {
 		txt.WriteString(win.Typed())
-		// b/c GLFW doesn't support {Enter} (and {Tab}) (yet)
+		// because GLFW doesn't support {Enter} (and {Tab}) (yet)
 		if win.JustPressed(pixelgl.KeyEnter) {
 			txt.WriteRune('\n')
 		}
@@ -73,6 +62,21 @@ func run() {
 
 		<-fps
 	}
+}
+
+func run() {
+	cfg := pixelgl.WindowConfig{
+		Title:  "Pixel Rocks!",
+		Bounds: pixel.R(0, 0, 1024, 768),
+		// VSync:  true,
+	}
+	win, err := pixelgl.NewWindow(cfg)
+	if err != nil {
+		panic(err)
+	}
+	win.SetSmooth(true) // remove potential artifacts
+
+	gameloop(win)
 }
 
 func main() {
