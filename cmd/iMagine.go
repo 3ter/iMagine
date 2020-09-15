@@ -3,9 +3,9 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -42,7 +42,7 @@ func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Pixel Rocks!",
 		Bounds: pixel.R(0, 0, 1024, 768),
-		VSync:  true,
+		// VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
@@ -50,7 +50,7 @@ func run() {
 	}
 	win.SetSmooth(true) // remove potential artifacts
 
-	face, err := loadTTF("intuitive.ttf", 52)
+	face, err := loadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
 	}
@@ -58,17 +58,20 @@ func run() {
 	atlas := text.NewAtlas(face, text.ASCII)
 	txt := text.New(pixel.V(100, 500), atlas)
 
-	for i := 0; i < 6; i++ {
-		txt.Orig.X += 10
-		txt.Orig.Y += 9000
-		fmt.Fprintln(txt, "Orig:", txt.Orig, "Dot:", txt.Dot)
-		// After (!) each line written text.Dot takes the X coordinate of text.Orig
-	}
+	fps := time.Tick(time.Second / 120)
 
 	for !win.Closed() {
+		txt.WriteString(win.Typed())
+		// b/c GLFW doesn't support {Enter} (and {Tab}) (yet)
+		if win.JustPressed(pixelgl.KeyEnter) {
+			txt.WriteRune('\n')
+		}
+
 		win.Clear(colornames.Black)
-		txt.Draw(win, pixel.IM.Scaled(txt.Orig, 1))
+		txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(txt.Bounds().Center())))
 		win.Update()
+
+		<-fps
 	}
 }
 
