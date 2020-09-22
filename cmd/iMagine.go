@@ -66,6 +66,8 @@ func run() {
 		if win.JustPressed(pixelgl.KeyEnter) {
 			txt.WriteRune('\n')
 		}
+		// TODO: Add backspace (e.g. use this as reference
+		// https://github.com/faiface/pixel-examples/blob/master/typewriter/main.go
 
 		win.Clear(colornames.Black)
 		txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(txt.Bounds().Center())))
