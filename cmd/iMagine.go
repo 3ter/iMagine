@@ -76,9 +76,10 @@ func run() {
 	atlas := text.NewAtlas(face, text.ASCII)
 	txt := text.New(pixel.V(100, 500), atlas)
 	title := text.New(pixel.ZV, atlas)
-	input := text.New(pixel.ZV, atlas)
+	footer := text.New(pixel.ZV, atlas)
 
 	var typed string
+	var bgColor = colornames.Black
 
 	fps := time.Tick(time.Second / 120)
 
@@ -86,6 +87,16 @@ func run() {
 
 		if title.Dot == title.Orig {
 			title.WriteString("Type in anything and press ENTER!")
+		}
+		if footer.Dot == footer.Orig {
+			footer.WriteString("Use the arrow keys to change the background!")
+		}
+
+		if win.Pressed(pixelgl.KeyDown) {
+			bgColor.R--
+		}
+		if win.Pressed(pixelgl.KeyUp) {
+			bgColor.R++
 		}
 
 		txt.WriteString(win.Typed())
@@ -105,9 +116,9 @@ func run() {
 		// TODO: Add backspace (e.g. use this as reference
 		// https://github.com/faiface/pixel-examples/blob/master/typewriter/main.go
 
-		win.Clear(colornames.Black)
-		input.Draw(win, pixel.IM.Scaled(input.Orig, 5))
+		win.Clear(bgColor)
 		title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, 300)))
+		footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, -300)))
 		txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(txt.Bounds().Center())))
 		win.Update()
 
