@@ -4,9 +4,12 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"time"
 
+	"github.com/faiface/beep/speaker"
+	"github.com/faiface/beep/vorbis"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
@@ -49,9 +52,9 @@ func gameloop(win *pixelgl.Window) {
 
 	fps := time.Tick(time.Second / 120)
 
-    // TODO: Move this into its function if possible
-    // Play audio track (NB: Doesn't work in the debugger!
-	f, err := os.Open("track1.ogg")
+	// TODO: Move this into its function if possible
+	// Play audio track (NB: Doesn't work in the debugger!
+	f, err := os.Open("../assets/track1.ogg")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,6 +77,7 @@ func gameloop(win *pixelgl.Window) {
 		txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(txt.Bounds().Center())))
 		win.Update()
 
+		// TODO: Understand exactly how this realizes the framerate
 		<-fps
 	}
 }
