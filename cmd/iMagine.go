@@ -49,6 +49,20 @@ func gameloop(win *pixelgl.Window) {
 
 	fps := time.Tick(time.Second / 120)
 
+    // TODO: Move this into its function if possible
+    // Play audio track (NB: Doesn't work in the debugger!
+	f, err := os.Open("track1.ogg")
+	if err != nil {
+		log.Fatal(err)
+	}
+	streamer, format, err := vorbis.Decode(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer streamer.Close()
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	speaker.Play(streamer)
+
 	for !win.Closed() {
 		txt.WriteString(win.Typed())
 		// because GLFW doesn't support {Enter} (and {Tab}) (yet)
