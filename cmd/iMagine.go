@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/faiface/beep"
+
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/vorbis"
 	"github.com/faiface/pixel"
@@ -17,6 +19,8 @@ import (
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font"
 )
+
+var isMusicPlaying = false
 
 func loadTTF(path string, size float64) (font.Face, error) {
 	file, err := os.Open(path)
@@ -41,6 +45,30 @@ func loadTTF(path string, size float64) (font.Face, error) {
 	}), nil
 }
 
+func getStreamer() beep.StreamSeekCloser {
+	f, err := os.Open("../assets/track1.ogg")
+	if err != nil {
+		log.Fatal(err)
+	}
+	streamer, format, err := vorbis.Decode(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+
+	return streamer
+}
+
+func toggleMusic(streamer beep.StreamSeekCloser) {
+	if isMusicPlaying {
+		speaker.Clear()
+		isMusicPlaying = false
+	} else {
+		speaker.Play(streamer)
+		isMusicPlaying = true
+	}
+}
+
 func gameloop(win *pixelgl.Window) {
 	face, err := loadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
@@ -52,25 +80,18 @@ func gameloop(win *pixelgl.Window) {
 
 	fps := time.Tick(time.Second / 120)
 
-	// TODO: Move this into its function if possible
-	// Play audio track (NB: Doesn't work in the debugger!
-	f, err := os.Open("../assets/track1.ogg")
-	if err != nil {
-		log.Fatal(err)
-	}
-	streamer, format, err := vorbis.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
+	var streamer = getStreamer()
 	defer streamer.Close()
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-	speaker.Play(streamer)
 
 	for !win.Closed() {
 		txt.WriteString(win.Typed())
 		// because GLFW doesn't support {Enter} (and {Tab}) (yet)
 		if win.JustPressed(pixelgl.KeyEnter) {
 			txt.WriteRune('\n')
+		}
+
+		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyM) {
+			toggleMusic(streamer)
 		}
 
 		win.Clear(colornames.Black)
