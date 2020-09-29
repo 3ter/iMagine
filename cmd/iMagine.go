@@ -5,9 +5,14 @@ package main
 import (
 	"image/color"
 	"io/ioutil"
+	"log"
 	"os"
 	"time"
 
+	"github.com/faiface/beep"
+
+	"github.com/faiface/beep/speaker"
+	"github.com/faiface/beep/vorbis"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
@@ -15,6 +20,8 @@ import (
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font"
 )
+
+var isMusicPlaying = false
 
 func loadTTF(path string, size float64) (font.Face, error) {
 	file, err := os.Open(path)
@@ -56,18 +63,31 @@ func convertTextToRGB(txt string) [3]uint8 {
 	return rgb
 }
 
-func run() {
-	cfg := pixelgl.WindowConfig{
-		Title:  "Pixel Rocks!",
-		Bounds: pixel.R(0, 0, 1024, 768),
-		// VSync:  true,
-	}
-	win, err := pixelgl.NewWindow(cfg)
+func getStreamer() beep.StreamSeekCloser {
+	f, err := os.Open("../assets/track1.ogg")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	win.SetSmooth(true) // remove potential artifacts
+	streamer, format, err := vorbis.Decode(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
+	return streamer
+}
+
+func toggleMusic(streamer beep.StreamSeekCloser) {
+	if isMusicPlaying {
+		speaker.Clear()
+		isMusicPlaying = false
+	} else {
+		speaker.Play(streamer)
+		isMusicPlaying = true
+	}
+}
+
+func gameloop(win *pixelgl.Window) {
 	face, err := loadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
@@ -83,7 +103,17 @@ func run() {
 
 	fps := time.Tick(time.Second / 120)
 
+	var streamer = getStreamer()
+	defer streamer.Close()
+
 	for !win.Closed() {
+
+		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
+			win.SetClosed(true)
+		}
+		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyM) {
+			toggleMusic(streamer)
+		}
 
 		if title.Dot == title.Orig {
 			title.WriteString("Type in anything and press ENTER!")
@@ -122,8 +152,24 @@ func run() {
 		txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(txt.Bounds().Center())))
 		win.Update()
 
+		// TODO: Understand exactly how this realizes the framerate
 		<-fps
 	}
+}
+
+func run() {
+	cfg := pixelgl.WindowConfig{
+		Title:  "Pixel Rocks!",
+		Bounds: pixel.R(0, 0, 1024, 768),
+		// VSync:  true,
+	}
+	win, err := pixelgl.NewWindow(cfg)
+	if err != nil {
+		panic(err)
+	}
+	win.SetSmooth(true) // remove potential artifacts
+
+	gameloop(win)
 }
 
 func main() {
