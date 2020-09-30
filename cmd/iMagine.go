@@ -3,6 +3,7 @@
 package main
 
 import (
+	"image/color"
 	"io/ioutil"
 	"log"
 	"os"
@@ -45,6 +46,23 @@ func loadTTF(path string, size float64) (font.Face, error) {
 	}), nil
 }
 
+func convertTextToRGB(txt string) [3]uint8 {
+	var rgb = [3]uint8{0, 0, 0}
+
+	for pos, char := range txt {
+		switch {
+		case pos <= 1/3*len(txt):
+			rgb[0] = uint8(rgb[0] + uint8(char)*10)
+		case pos <= 2/3*len(txt):
+			rgb[1] = uint8(rgb[0] + uint8(char)*20)
+		case pos <= len(txt):
+			rgb[2] = uint8(rgb[0] + uint8(char)*30)
+		}
+	}
+
+	return rgb
+}
+
 func getStreamer() beep.StreamSeekCloser {
 	f, err := os.Open("../assets/track1.ogg")
 	if err != nil {
@@ -77,6 +95,11 @@ func gameloop(win *pixelgl.Window) {
 
 	atlas := text.NewAtlas(face, text.ASCII)
 	txt := text.New(pixel.V(100, 500), atlas)
+	title := text.New(pixel.ZV, atlas)
+	footer := text.New(pixel.ZV, atlas)
+
+	var typed string
+	var bgColor = colornames.Black
 
 	fps := time.Tick(time.Second / 120)
 
@@ -84,17 +107,48 @@ func gameloop(win *pixelgl.Window) {
 	defer streamer.Close()
 
 	for !win.Closed() {
-		txt.WriteString(win.Typed())
-		// because GLFW doesn't support {Enter} (and {Tab}) (yet)
-		if win.JustPressed(pixelgl.KeyEnter) {
-			txt.WriteRune('\n')
-		}
 
+		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
+			win.SetClosed(true)
+		}
 		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyM) {
 			toggleMusic(streamer)
 		}
 
-		win.Clear(colornames.Black)
+		if title.Dot == title.Orig {
+			title.WriteString("Type in anything and press ENTER!")
+		}
+		if footer.Dot == footer.Orig {
+			footer.WriteString("Use the arrow keys to change the background!")
+		}
+
+		if win.Pressed(pixelgl.KeyDown) {
+			bgColor.R--
+		}
+		if win.Pressed(pixelgl.KeyUp) {
+			bgColor.R++
+		}
+
+		txt.WriteString(win.Typed())
+
+		typed = typed + win.Typed()
+
+		// b/c GLFW doesn't support {Enter} (and {Tab}) (yet)
+		if win.JustPressed(pixelgl.KeyEnter) {
+			// txt.WriteRune('\n')
+			title.Clear()
+			rgb := convertTextToRGB(typed)
+			title.Color = color.RGBA{rgb[0], rgb[1], rgb[2], 0xff}
+			title.WriteString("That worked quite well! (You can do that again)")
+			typed = ""
+			txt.Clear()
+		}
+		// TODO: Add backspace (e.g. use this as reference
+		// https://github.com/faiface/pixel-examples/blob/master/typewriter/main.go
+
+		win.Clear(bgColor)
+		title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, 300)))
+		footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, -300)))
 		txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(txt.Bounds().Center())))
 		win.Update()
 
