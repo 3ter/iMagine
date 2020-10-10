@@ -4,21 +4,15 @@ package main
 
 import (
 	"image/color"
-	"io/ioutil"
-	"log"
-	"os"
 	"time"
 
 	"github.com/faiface/beep"
 
 	"github.com/faiface/beep/speaker"
-	"github.com/faiface/beep/vorbis"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
-	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/colornames"
-	"golang.org/x/image/font"
 
 	"github.com/3ter/iMagine/internal/utils"
 )
@@ -27,29 +21,6 @@ var isMusicPlaying = false
 
 var fragmentShader = utils.LoadFileToString("./assets/wavy_shader.glsl")
 var uTime, uSpeed float32
-
-func loadTTF(path string, size float64) (font.Face, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-
-	font, err := truetype.Parse(bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	return truetype.NewFace(font, &truetype.Options{
-		Size:              size,
-		GlyphCacheEntries: 1,
-	}), nil
-}
 
 func convertTextToRGB(txt string) [3]uint8 {
 	var rgb = [3]uint8{0, 0, 0}
@@ -66,20 +37,6 @@ func convertTextToRGB(txt string) [3]uint8 {
 	}
 
 	return rgb
-}
-
-func getStreamer() beep.StreamSeekCloser {
-	f, err := os.Open("./assets/track1.ogg")
-	if err != nil {
-		log.Fatal(err)
-	}
-	streamer, format, err := vorbis.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-
-	return streamer
 }
 
 func toggleMusic(streamer beep.StreamSeekCloser) {
@@ -104,7 +61,7 @@ func updateShader(uTime *float32, uSpeed *float32, start time.Time) {
 }
 
 func gameloop(win *pixelgl.Window) {
-	face, err := loadTTF("./assets/intuitive.ttf", 20)
+	face, err := utils.LoadTTF("./assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
 	}
@@ -119,7 +76,7 @@ func gameloop(win *pixelgl.Window) {
 
 	fps := time.Tick(time.Second / 120)
 
-	var streamer = getStreamer()
+	var streamer = utils.GetStreamer("./assets/track1.ogg")
 	defer streamer.Close()
 
 	var isShaderApplied = false
