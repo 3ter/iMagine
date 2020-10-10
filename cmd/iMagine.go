@@ -74,7 +74,7 @@ func gameloop(win *pixelgl.Window) {
 	var typed string
 	var bgColor = colornames.Black
 
-	fps := time.Tick(time.Second / 120)
+	fps := time.Tick(time.Second / 120) // 120 FPS provide a very smooth typing experience
 
 	var streamer = utils.GetStreamer("./assets/track1.ogg")
 	defer streamer.Close()
