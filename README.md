@@ -1,12 +1,8 @@
 # iMagine
 
-For running the boilerplate in Visual Studio Code
+For running the demo application execute the following in a terminal (e.g. directly in vscode):
 
-In vscode Terminal run:
-
-`cd cmd`
-
-`go run iMagine.go`
+`go run cmd/iMagine.go`
 
 Build Windows Executable:
 `env GOOS=windows GOARCH=amd64 go build`

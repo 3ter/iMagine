@@ -5,7 +5,6 @@ package main
 import (
 	"fmt"
 	"image/color"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -17,37 +16,17 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
-	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/colornames"
-	"golang.org/x/image/font"
+
+	"github.com/3ter/iMagine/internal/utils"
 )
 
 var isMusicPlaying = false
 var trackArray = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
 var trackPath = "../assets/"
 
-func loadTTF(path string, size float64) (font.Face, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-
-	font, err := truetype.Parse(bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	return truetype.NewFace(font, &truetype.Options{
-		Size:              size,
-		GlyphCacheEntries: 1,
-	}), nil
-}
+var fragmentShader = utils.LoadFileToString("./assets/wavy_shader.glsl")
+var uTime, uSpeed float32
 
 func convertTextToRGB(txt string) [3]uint8 {
 	var rgb = [3]uint8{0, 0, 0}
@@ -90,8 +69,19 @@ func toggleMusic(streamer beep.StreamSeekCloser) {
 	}
 }
 
+func applyShader(win *pixelgl.Window, start time.Time) {
+	win.Canvas().SetUniform("uTime", &uTime)
+	win.Canvas().SetUniform("uSpeed", &uSpeed)
+	win.Canvas().SetFragmentShader(fragmentShader)
+}
+
+func updateShader(uTime *float32, uSpeed *float32, start time.Time) {
+	*uSpeed = 5.0
+	*uTime = float32(time.Since(start).Seconds())
+}
+
 func gameloop(win *pixelgl.Window) {
-	face, err := loadTTF("../assets/intuitive.ttf", 20)
+	face, err := utils.LoadTTF("./assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
 	}
@@ -104,7 +94,7 @@ func gameloop(win *pixelgl.Window) {
 	var typed string
 	var bgColor = colornames.Black
 
-	fps := time.Tick(time.Second / 120)
+	fps := time.Tick(time.Second / 120) // 120 FPS provide a very smooth typing experience
 
 	var trackMap = make(map[int]beep.StreamSeekCloser)
 	for index, element := range trackArray {
@@ -117,7 +107,12 @@ func gameloop(win *pixelgl.Window) {
 	//var streamer = getStreamer()
 
 	//defer streamer.Close()
+	var streamer = utils.GetStreamer("./assets/track1.ogg")
+	defer streamer.Close()
 
+	var isShaderApplied = false
+
+	start := time.Now()
 	for !win.Closed() {
 
 		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
@@ -127,6 +122,15 @@ func gameloop(win *pixelgl.Window) {
 			toggleMusic(streamer)
 		}
 		*/
+		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyS) {
+			// TODO: Make it a toggle (set a default fragment shader..?)
+			applyShader(win, start)
+			isShaderApplied = true
+		}
+
+		if isShaderApplied {
+			updateShader(&uTime, &uSpeed, start)
+		}
 
 		if title.Dot == title.Orig {
 			title.WriteString("Type in anything and press ENTER!")
