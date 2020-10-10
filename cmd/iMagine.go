@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"io/ioutil"
 	"log"
@@ -22,6 +23,8 @@ import (
 )
 
 var isMusicPlaying = false
+var trackArray = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
+var trackPath = "../assets/"
 
 func loadTTF(path string, size float64) (font.Face, error) {
 	file, err := os.Open(path)
@@ -63,8 +66,8 @@ func convertTextToRGB(txt string) [3]uint8 {
 	return rgb
 }
 
-func getStreamer() beep.StreamSeekCloser {
-	f, err := os.Open("../assets/track1.ogg")
+func getStreamer(trackpath string) beep.StreamSeekCloser {
+	f, err := os.Open(trackpath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -103,17 +106,27 @@ func gameloop(win *pixelgl.Window) {
 
 	fps := time.Tick(time.Second / 120)
 
-	var streamer = getStreamer()
-	defer streamer.Close()
+	var trackMap = make(map[int]beep.StreamSeekCloser)
+	for index, element := range trackArray {
+		fmt.Println(index, trackPath, element)
+		var trackStreamer = getStreamer(trackPath + element)
+		trackMap[index] = trackStreamer
+		defer trackStreamer.Close()
+	}
+
+	//var streamer = getStreamer()
+
+	//defer streamer.Close()
 
 	for !win.Closed() {
 
 		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 			win.SetClosed(true)
 		}
-		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyM) {
+		/*if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyM) {
 			toggleMusic(streamer)
 		}
+		*/
 
 		if title.Dot == title.Orig {
 			title.WriteString("Type in anything and press ENTER!")
