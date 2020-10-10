@@ -26,6 +26,7 @@ import (
 var isMusicPlaying = false
 
 var fragmentShader = utils.LoadFileToString("./assets/wavy_shader.glsl")
+var uTime, uSpeed float32
 
 func loadTTF(path string, size float64) (font.Face, error) {
 	file, err := os.Open(path)
@@ -92,19 +93,14 @@ func toggleMusic(streamer beep.StreamSeekCloser) {
 }
 
 func applyShader(win *pixelgl.Window, start time.Time) {
-	var uTime, uSpeed float32
-
 	win.Canvas().SetUniform("uTime", &uTime)
 	win.Canvas().SetUniform("uSpeed", &uSpeed)
-	uSpeed = 5.0
 	win.Canvas().SetFragmentShader(fragmentShader)
-	uTime = float32(time.Since(start).Seconds())
-	if win.Pressed(pixelgl.KeyRight) {
-		uSpeed += 0.1
-	}
-	if win.Pressed(pixelgl.KeyLeft) {
-		uSpeed -= 0.1
-	}
+}
+
+func updateShader(uTime *float32, uSpeed *float32, start time.Time) {
+	*uSpeed = 5.0
+	*uTime = float32(time.Since(start).Seconds())
 }
 
 func gameloop(win *pixelgl.Window) {
@@ -126,6 +122,8 @@ func gameloop(win *pixelgl.Window) {
 	var streamer = getStreamer()
 	defer streamer.Close()
 
+	var isShaderApplied = false
+
 	start := time.Now()
 	for !win.Closed() {
 
@@ -136,8 +134,13 @@ func gameloop(win *pixelgl.Window) {
 			toggleMusic(streamer)
 		}
 		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyS) {
-			// TODO: Make it a toggle
+			// TODO: Make it a toggle (set a default fragment shader..?)
 			applyShader(win, start)
+			isShaderApplied = true
+		}
+
+		if isShaderApplied {
+			updateShader(&uTime, &uSpeed, start)
 		}
 
 		if title.Dot == title.Orig {
