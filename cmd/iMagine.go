@@ -19,9 +19,14 @@ import (
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font"
+
+	"github.com/3ter/iMagine/internal/utils"
 )
 
 var isMusicPlaying = false
+
+var fragmentShader = utils.LoadFileToString("./assets/wavy_shader.glsl")
+var uTime, uSpeed float32
 
 func loadTTF(path string, size float64) (font.Face, error) {
 	file, err := os.Open(path)
@@ -64,7 +69,7 @@ func convertTextToRGB(txt string) [3]uint8 {
 }
 
 func getStreamer() beep.StreamSeekCloser {
-	f, err := os.Open("../assets/track1.ogg")
+	f, err := os.Open("./assets/track1.ogg")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,8 +92,19 @@ func toggleMusic(streamer beep.StreamSeekCloser) {
 	}
 }
 
+func applyShader(win *pixelgl.Window, start time.Time) {
+	win.Canvas().SetUniform("uTime", &uTime)
+	win.Canvas().SetUniform("uSpeed", &uSpeed)
+	win.Canvas().SetFragmentShader(fragmentShader)
+}
+
+func updateShader(uTime *float32, uSpeed *float32, start time.Time) {
+	*uSpeed = 5.0
+	*uTime = float32(time.Since(start).Seconds())
+}
+
 func gameloop(win *pixelgl.Window) {
-	face, err := loadTTF("../assets/intuitive.ttf", 20)
+	face, err := loadTTF("./assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
 	}
@@ -106,6 +122,9 @@ func gameloop(win *pixelgl.Window) {
 	var streamer = getStreamer()
 	defer streamer.Close()
 
+	var isShaderApplied = false
+
+	start := time.Now()
 	for !win.Closed() {
 
 		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
@@ -113,6 +132,15 @@ func gameloop(win *pixelgl.Window) {
 		}
 		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyM) {
 			toggleMusic(streamer)
+		}
+		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyS) {
+			// TODO: Make it a toggle (set a default fragment shader..?)
+			applyShader(win, start)
+			isShaderApplied = true
+		}
+
+		if isShaderApplied {
+			updateShader(&uTime, &uSpeed, start)
 		}
 
 		if title.Dot == title.Orig {
