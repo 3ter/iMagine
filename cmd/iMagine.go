@@ -5,14 +5,11 @@ package main
 import (
 	"fmt"
 	"image/color"
-	"log"
-	"os"
 	"time"
 
 	"github.com/faiface/beep"
 
 	"github.com/faiface/beep/speaker"
-	"github.com/faiface/beep/vorbis"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
@@ -23,7 +20,7 @@ import (
 
 var isMusicPlaying = false
 var trackArray = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
-var trackPath = "../assets/"
+var trackPath = "./assets/"
 
 var fragmentShader = utils.LoadFileToString("./assets/wavy_shader.glsl")
 var uTime, uSpeed float32
@@ -45,28 +42,19 @@ func convertTextToRGB(txt string) [3]uint8 {
 	return rgb
 }
 
-func getStreamer(trackpath string) beep.StreamSeekCloser {
-	f, err := os.Open(trackpath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	streamer, format, err := vorbis.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-
-	return streamer
-}
-
 func toggleMusic(streamer beep.StreamSeekCloser) {
-	if isMusicPlaying {
-		speaker.Clear()
-		isMusicPlaying = false
-	} else {
-		speaker.Play(streamer)
-		isMusicPlaying = true
-	}
+
+	speaker.Play(streamer)
+
+	/*
+		if isMusicPlaying {
+			speaker.Clear()
+			isMusicPlaying = false
+		} else {
+			speaker.Play(streamer)
+			isMusicPlaying = true
+		}
+	*/
 }
 
 func applyShader(win *pixelgl.Window, start time.Time) {
@@ -99,16 +87,10 @@ func gameloop(win *pixelgl.Window) {
 	var trackMap = make(map[int]beep.StreamSeekCloser)
 	for index, element := range trackArray {
 		fmt.Println(index, trackPath, element)
-		var trackStreamer = getStreamer(trackPath + element)
+		var trackStreamer = utils.GetStreamer(trackPath + element)
 		trackMap[index] = trackStreamer
 		defer trackStreamer.Close()
 	}
-
-	//var streamer = getStreamer()
-
-	//defer streamer.Close()
-	var streamer = utils.GetStreamer("./assets/track1.ogg")
-	defer streamer.Close()
 
 	var isShaderApplied = false
 
@@ -118,10 +100,22 @@ func gameloop(win *pixelgl.Window) {
 		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 			win.SetClosed(true)
 		}
-		/*if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyM) {
-			toggleMusic(streamer)
+		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyM) {
+			toggleMusic(trackMap[0])
 		}
-		*/
+
+		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyN) {
+			toggleMusic(trackMap[1])
+		}
+
+		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyO) {
+			toggleMusic(trackMap[2])
+		}
+
+		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyP) {
+			toggleMusic((trackMap[3]))
+		}
+
 		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyS) {
 			// TODO: Make it a toggle (set a default fragment shader..?)
 			applyShader(win, start)
