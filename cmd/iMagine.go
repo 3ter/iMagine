@@ -17,9 +17,11 @@ import (
 	"github.com/3ter/iMagine/internal/utils"
 )
 
+var gameState = "mainMenu"
 var isMusicPlaying = false
+var bgColor = colornames.Black
 
-var fragmentShader = utils.LoadFileToString("./assets/wavy_shader.glsl")
+var fragmentShader = utils.LoadFileToString("../assets/wavy_shader.glsl")
 var uTime, uSpeed float32
 
 func convertTextToRGB(txt string) [3]uint8 {
@@ -60,8 +62,34 @@ func updateShader(uTime *float32, uSpeed *float32, start time.Time) {
 	*uTime = float32(time.Since(start).Seconds())
 }
 
+func returnMenuTexts(atlas *text.Atlas) []*text.Text {
+	var menuItems = []string{"Demo", "Quit"}
+
+	menuTexts := make([]*text.Text, 2)
+	for i, menuItem := range menuItems {
+		txt := text.New(pixel.ZV, atlas)
+		txt.WriteString(menuItem)
+		menuTexts[i] = txt
+	}
+
+	return menuTexts
+}
+
+func drawMainMenu(win *pixelgl.Window, atlas *text.Atlas) {
+	win.Clear(bgColor)
+
+	menuTextVerticalOffset := 50 // pixels
+
+	menuTexts := returnMenuTexts(atlas)
+	for i, menuText := range menuTexts {
+		centerTextMatrix := pixel.IM.Moved(win.Bounds().Center().Sub(menuText.Bounds().Center()))
+		verticalAdjustVector := pixel.V(0, float64(-menuTextVerticalOffset*i))
+		menuText.Draw(win, centerTextMatrix.Moved(verticalAdjustVector))
+	}
+}
+
 func gameloop(win *pixelgl.Window) {
-	face, err := utils.LoadTTF("./assets/intuitive.ttf", 20)
+	face, err := utils.LoadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
 	}
@@ -72,17 +100,24 @@ func gameloop(win *pixelgl.Window) {
 	footer := text.New(pixel.ZV, atlas)
 
 	var typed string
-	var bgColor = colornames.Black
 
 	fps := time.Tick(time.Second / 120) // 120 FPS provide a very smooth typing experience
 
-	var streamer = utils.GetStreamer("./assets/track1.ogg")
+	var streamer = utils.GetStreamer("../assets/track1.ogg")
 	defer streamer.Close()
 
 	var isShaderApplied = false
 
 	start := time.Now()
 	for !win.Closed() {
+
+		switch gameState {
+		case "mainMenu":
+			drawMainMenu(win, atlas)
+			win.Update()
+			<-fps
+			continue
+		}
 
 		if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 			win.SetClosed(true)
