@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/faiface/beep"
+	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/vorbis"
 	"github.com/golang/freetype/truetype"
@@ -22,6 +23,7 @@ func LoadFileToString(filename string) string {
 	return string(b)
 }
 
+// LoadTTF has been taken from the pixel Wiki
 func LoadTTF(path string, size float64) (font.Face, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -45,7 +47,21 @@ func LoadTTF(path string, size float64) (font.Face, error) {
 	}), nil
 }
 
-func GetStreamer(filePath string) beep.StreamSeekCloser {
+// TtfFromBytesMust has been taken from pixel-examples "Typewriter"
+// https://github.com/faiface/pixel-examples/tree/master/typewriter
+func TtfFromBytesMust(b []byte, size float64) font.Face {
+	ttf, err := truetype.Parse(b)
+	if err != nil {
+		panic(err)
+	}
+	return truetype.NewFace(ttf, &truetype.Options{
+		Size:              size,
+		GlyphCacheEntries: 1,
+	})
+}
+
+// GetStreamer had been taken from the pixel Wiki
+func GetStreamer(filePath string) *effects.Volume {
 	f, err := os.Open(filePath)
 	if err != nil {
 		log.Fatal(err)
@@ -56,5 +72,13 @@ func GetStreamer(filePath string) beep.StreamSeekCloser {
 	}
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
-	return streamer
+	ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer), Paused: false}
+	volume := &effects.Volume{
+		Streamer: ctrl,
+		Base:     2,
+		Volume:   0,
+		Silent:   false,
+	}
+
+	return volume
 }
