@@ -220,7 +220,7 @@ func gameloop(win *pixelgl.Window) {
 				//toggleMusic(trackMap[3])
 			}
 
-			if win.JustPressed(pixelgl.KeyA) {
+			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyA) {
 				/*toggleMusic(trackMap[0])
 				toggleMusic(trackMap[1])
 				toggleMusic(trackMap[2])
@@ -242,10 +242,17 @@ func gameloop(win *pixelgl.Window) {
 			}
 
 			if title.Dot == title.Orig {
-				title.WriteString("Type in anything and press ENTER!")
+				title.WriteString("Type in anything and press ENTER!\n\n")
+				title.WriteString("CTRL + S to toggle shader")
+
+				title.WriteString("CTRL + A to play music\n")
+				title.WriteString("CTRL + U, I, O, P to increase volume of music layers\n")
+				title.WriteString("CTRL + J, K, L, O-Umlaut (; for QWERTY) to decrease volume of individual tracks")
+
 			}
 			if footer.Dot == footer.Orig {
-				footer.WriteString("Use the arrow keys to change the background!")
+				footer.WriteString("Use the arrow keys to change the background!\n")
+
 			}
 
 			if win.Pressed(pixelgl.KeyDown) {
