@@ -68,10 +68,11 @@ type mainMenuItem struct {
 
 var menuItems = []*mainMenuItem{
 	&mainMenuItem{"Demo", "selected"},
+	&mainMenuItem{"Start", "unselected"},
 	&mainMenuItem{"Quit", "unselected"}}
 
 func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
-	menuTexts := make([]*text.Text, 2)
+	menuTexts := make([]*text.Text, len(menuItems))
 	for i, menuItem := range menuItems {
 		txt := text.New(pixel.ZV, atlasRegular)
 		if menuItem.State == "selected" {
@@ -109,6 +110,7 @@ func handleMainMenuAndReturnState(win *pixelgl.Window) string {
 			if menuItem.State == "selected" && i < len(menuItems)-1 {
 				menuItem.State = "unselected"
 				menuItems[i+1].State = "selected"
+				break
 			}
 		}
 	}
@@ -117,6 +119,7 @@ func handleMainMenuAndReturnState(win *pixelgl.Window) string {
 			if menuItem.State == "selected" && i > 0 {
 				menuItem.State = "unselected"
 				menuItems[i-1].State = "selected"
+				break
 			}
 		}
 	}
@@ -165,6 +168,8 @@ func gameloop(win *pixelgl.Window) {
 			win.SetClosed(true)
 		case "mainMenu":
 			gameState = handleMainMenuAndReturnState(win)
+		case "Start":
+			gameState = "Quit"
 		case "Demo":
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 				win.SetClosed(true)
