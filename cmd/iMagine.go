@@ -152,6 +152,7 @@ func gameloop(win *pixelgl.Window) {
 		fmt.Println(index, trackPath, element)
 		var streamer = utils.GetStreamer(trackPath + element)
 		trackMap[index] = streamer
+
 		//defer streamer.Close()
 	}
 
@@ -174,60 +175,38 @@ func gameloop(win *pixelgl.Window) {
 			}
 
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyU) {
-				//toggleMusic(trackMap[0])
-				trackMap[0].Volume += 0.5
+				utils.VolumeUp(trackMap[0])
 			}
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyJ) {
-				//toggleMusic(trackMap[0])
-				trackMap[0].Volume -= 0.5
+				utils.VolumeDown(trackMap[0])
 			}
 
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyI) {
-				//toggleMusic(trackMap[1])
-				trackMap[1].Volume += 0.5
+				utils.VolumeUp(trackMap[1])
 			}
 
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyK) {
-				//toggleMusic(trackMap[1])
-				trackMap[1].Volume -= 0.5
+				utils.VolumeDown(trackMap[1])
 			}
 
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyO) {
-				trackMap[2].Volume += 0.5
-				//toggleMusic(trackMap[2])
-
+				utils.VolumeUp(trackMap[2])				
 			}
 
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyL) {
-				trackMap[2].Volume -= 0.5
-				//toggleMusic(trackMap[2])
-
+				utils.VolumeDown(trackMap[2])
 			}
 
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyP) {
-				trackMap[3].Volume += 0.5
-				//toggleMusic(trackMap[2])
-
+				utils.VolumeUp(trackMap[3])	
 			}
 
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeySemicolon) {
-				trackMap[3].Volume -= 0.5
-				//toggleMusic(trackMap[2])
-
-			}
-
-			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyP) {
-				//toggleMusic(trackMap[3])
+				utils.VolumeDown(trackMap[3])	
 			}
 
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyA) {
-				/*toggleMusic(trackMap[0])
-				toggleMusic(trackMap[1])
-				toggleMusic(trackMap[2])
-				toggleMusic(trackMap[3])
-				*/
 				allStreamer := beep.Mix(trackMap[0], trackMap[1], trackMap[2], trackMap[3])
-
 				speaker.Play(allStreamer)
 			}
 
@@ -243,11 +222,11 @@ func gameloop(win *pixelgl.Window) {
 
 			if title.Dot == title.Orig {
 				title.WriteString("Type in anything and press ENTER!\n\n")
-				title.WriteString("CTRL + S to toggle shader")
+				title.WriteString("CTRL + S: toggle shader\n")
 
-				title.WriteString("CTRL + A to play music\n")
-				title.WriteString("CTRL + U, I, O, P to increase volume of music layers\n")
-				title.WriteString("CTRL + J, K, L, O-Umlaut (; for QWERTY) to decrease volume of individual tracks")
+				title.WriteString("CTRL + A: play music\n")
+				title.WriteString("CTRL + U, I, O, P: increase volume of music layers\n")
+				title.WriteString("CTRL + J, K, L, O-Umlaut (; for QWERTY): decrease volume of individual tracks")
 
 			}
 			if footer.Dot == footer.Orig {
