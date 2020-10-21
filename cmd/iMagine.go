@@ -1,13 +1,12 @@
-// taken from the tutorial here: https://github.com/faiface/pixel/wiki/Typing-text-on-the-screen
-
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"time"
 
 	"github.com/faiface/beep"
-
+	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -21,6 +20,8 @@ import (
 
 var gameState = "mainMenu"
 var isMusicPlaying = false
+var trackArray = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
+var trackPath = "../assets/"
 var bgColor = colornames.Black
 
 var fragmentShader = utils.LoadFileToString("../assets/wavy_shader.glsl")
@@ -44,13 +45,9 @@ func convertTextToRGB(txt string) [3]uint8 {
 }
 
 func toggleMusic(streamer beep.StreamSeekCloser) {
-	if isMusicPlaying {
-		speaker.Clear()
-		isMusicPlaying = false
-	} else {
-		speaker.Play(streamer)
-		isMusicPlaying = true
-	}
+
+	speaker.Play(streamer)
+
 }
 
 func applyShader(win *pixelgl.Window, start time.Time) {
@@ -150,8 +147,14 @@ func gameloop(win *pixelgl.Window) {
 
 	fps := time.Tick(time.Second / 120) // 120 FPS provide a very smooth typing experience
 
-	var streamer = utils.GetStreamer("../assets/track1.ogg")
-	defer streamer.Close()
+	var trackMap = make(map[int]*effects.Volume)
+	for index, element := range trackArray {
+		fmt.Println(index, trackPath, element)
+		var streamer = utils.GetStreamer(trackPath + element)
+		trackMap[index] = streamer
+
+		//defer streamer.Close()
+	}
 
 	var isShaderApplied = false
 
@@ -170,9 +173,43 @@ func gameloop(win *pixelgl.Window) {
 			if win.JustPressed(pixelgl.KeyEscape) {
 				gameState = "mainMenu"
 			}
-			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyM) {
-				toggleMusic(streamer)
+
+			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyU) {
+				utils.VolumeUp(trackMap[0])
 			}
+			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyJ) {
+				utils.VolumeDown(trackMap[0])
+			}
+
+			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyI) {
+				utils.VolumeUp(trackMap[1])
+			}
+
+			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyK) {
+				utils.VolumeDown(trackMap[1])
+			}
+
+			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyO) {
+				utils.VolumeUp(trackMap[2])				
+			}
+
+			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyL) {
+				utils.VolumeDown(trackMap[2])
+			}
+
+			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyP) {
+				utils.VolumeUp(trackMap[3])	
+			}
+
+			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeySemicolon) {
+				utils.VolumeDown(trackMap[3])	
+			}
+
+			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyA) {
+				allStreamer := beep.Mix(trackMap[0], trackMap[1], trackMap[2], trackMap[3])
+				speaker.Play(allStreamer)
+			}
+
 			if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyS) {
 				// TODO: Make it a toggle (set a default fragment shader..?)
 				applyShader(win, start)
@@ -184,10 +221,17 @@ func gameloop(win *pixelgl.Window) {
 			}
 
 			if title.Dot == title.Orig {
-				title.WriteString("Type in anything and press ENTER!")
+				title.WriteString("Type in anything and press ENTER!\n\n")
+				title.WriteString("CTRL + S: toggle shader\n")
+
+				title.WriteString("CTRL + A: play music\n")
+				title.WriteString("CTRL + U, I, O, P: increase volume of music layers\n")
+				title.WriteString("CTRL + J, K, L, O-Umlaut (; for QWERTY): decrease volume of individual tracks")
+
 			}
 			if footer.Dot == footer.Orig {
-				footer.WriteString("Use the arrow keys to change the background!")
+				footer.WriteString("Use the arrow keys to change the background!\n")
+
 			}
 
 			if win.Pressed(pixelgl.KeyDown) {

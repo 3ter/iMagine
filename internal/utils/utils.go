@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/faiface/beep"
+	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/vorbis"
 	"github.com/golang/freetype/truetype"
@@ -59,8 +60,8 @@ func TtfFromBytesMust(b []byte, size float64) font.Face {
 	})
 }
 
-// GetStreamer had been taken from the pixel Wiki
-func GetStreamer(filePath string) beep.StreamSeekCloser {
+// GetStreamer had initially been taken from the pixel Wiki
+func GetStreamer(filePath string) *effects.Volume {
 	f, err := os.Open(filePath)
 	if err != nil {
 		log.Fatal(err)
@@ -71,5 +72,33 @@ func GetStreamer(filePath string) beep.StreamSeekCloser {
 	}
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
-	return streamer
+	ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer), Paused: false}
+	volume := &effects.Volume{
+		Streamer: ctrl,
+		Base:     2,
+		Volume:   0,
+		Silent:   false,
+	}
+
+	return volume
+}
+
+//Wrapper for volume up
+func VolumeUp( track *effects.Volume) {
+	if track.Silent {
+		track.Volume = 0.5
+		track.Silent = false
+	} else {
+		track.Volume += 0.5
+	}
+}
+
+//Wrapper for volume down
+func VolumeDown(track *effects.Volume) {
+	if track.Volume <= 0.5 {
+		track.Silent = true
+	} else {
+		track.Volume -= 0.5
+	}
+		
 }
