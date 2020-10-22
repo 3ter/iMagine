@@ -265,7 +265,11 @@ func handleDemoInput(win *pixelgl.Window, start time.Time) {
 	}
 }
 
-func drawDemoScene(win *pixelgl.Window) {
+func drawDemoScene(win *pixelgl.Window, start time.Time) {
+	if isShaderApplied {
+		updateShader(&uTime, &uSpeed, start)
+	}
+
 	win.Clear(bgColor)
 	title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, 300)))
 	footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, -300)))
@@ -287,12 +291,7 @@ func gameloop(win *pixelgl.Window) {
 			gameState = "Quit"
 		case "Demo":
 			handleDemoInput(win, start)
-
-			if isShaderApplied {
-				updateShader(&uTime, &uSpeed, start)
-			}
-
-			drawDemoScene(win)
+			drawDemoScene(win, start)
 		}
 		win.Update()
 		<-fps
