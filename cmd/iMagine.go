@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"time"
 
+	"github.com/3ter/iMagine/internal/scene"
+
 	"golang.org/x/image/font"
 
 	"github.com/faiface/beep"
@@ -17,26 +19,29 @@ import (
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/goregular"
 
-	"github.com/3ter/iMagine/internal/utils"
+	"github.com/3ter/iMagine/internal/controlaudio"
+	"github.com/3ter/iMagine/internal/fileio"
 )
 
-var gameState = "mainMenu"
-var isMusicPlaying = false
-var trackArray = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
-var trackPath = "../assets/"
-var bgColor = colornames.Black
+var (
+	gameState = "mainMenu"
 
-var fragmentShader = utils.LoadFileToString("../assets/wavy_shader.glsl")
-var uTime, uSpeed float32
+	isMusicPlaying = false
+	trackArray     = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
+	trackPath      = "../assets/"
+	trackMap       map[int]*effects.Volume
 
-var trackMap map[int]*effects.Volume
-var isShaderApplied bool
+	bgColor         = colornames.Black
+	fragmentShader  = fileio.LoadFileToString("../assets/wavy_shader.glsl")
+	uTime, uSpeed   float32
+	isShaderApplied bool
 
-var face font.Face
-var txt *text.Text
-var title *text.Text
-var footer *text.Text
-var typed string
+	face   font.Face
+	txt    *text.Text
+	title  *text.Text
+	footer *text.Text
+	typed  string
+)
 
 func addStaticText() {
 	// Add text only if it is empty
@@ -55,7 +60,7 @@ func addStaticText() {
 }
 
 func init() {
-	face, err := utils.LoadTTF("../assets/intuitive.ttf", 20)
+	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +73,7 @@ func init() {
 	trackMap = make(map[int]*effects.Volume)
 	for index, element := range trackArray {
 		fmt.Println(index, trackPath, element)
-		var streamer = utils.GetStreamer(trackPath + element)
+		var streamer = fileio.GetStreamer(trackPath + element)
 		trackMap[index] = streamer
 
 		//TODO: Why is this commented out?
@@ -139,6 +144,7 @@ func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
 }
 
 func drawMainMenu(win *pixelgl.Window, atlasRegular, atlasBold *text.Atlas) {
+	bgColor = colornames.Black
 	win.Clear(bgColor)
 
 	menuTextVerticalOffset := 50 // pixels
@@ -152,8 +158,8 @@ func drawMainMenu(win *pixelgl.Window, atlasRegular, atlasBold *text.Atlas) {
 }
 
 func handleMainMenuAndReturnState(win *pixelgl.Window) string {
-	regularFace := utils.TtfFromBytesMust(goregular.TTF, 20)
-	boldFace := utils.TtfFromBytesMust(gobold.TTF, 20)
+	regularFace := fileio.TtfFromBytesMust(goregular.TTF, 20)
+	boldFace := fileio.TtfFromBytesMust(gobold.TTF, 20)
 	atlasRegular := text.NewAtlas(regularFace, text.ASCII)
 	atlasBold := text.NewAtlas(boldFace, text.ASCII)
 	drawMainMenu(win, atlasRegular, atlasBold)
@@ -197,34 +203,34 @@ func handleDemoInput(win *pixelgl.Window, start time.Time) {
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyU) {
-		utils.VolumeUp(trackMap[0])
+		controlaudio.VolumeUp(trackMap[0])
 	}
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyJ) {
-		utils.VolumeDown(trackMap[0])
+		controlaudio.VolumeDown(trackMap[0])
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyI) {
-		utils.VolumeUp(trackMap[1])
+		controlaudio.VolumeUp(trackMap[1])
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyK) {
-		utils.VolumeDown(trackMap[1])
+		controlaudio.VolumeDown(trackMap[1])
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyO) {
-		utils.VolumeUp(trackMap[2])
+		controlaudio.VolumeUp(trackMap[2])
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyL) {
-		utils.VolumeDown(trackMap[2])
+		controlaudio.VolumeDown(trackMap[2])
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyP) {
-		utils.VolumeUp(trackMap[3])
+		controlaudio.VolumeUp(trackMap[3])
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeySemicolon) {
-		utils.VolumeDown(trackMap[3])
+		controlaudio.VolumeDown(trackMap[3])
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyA) {
@@ -265,10 +271,38 @@ func drawDemoScene(win *pixelgl.Window, start time.Time) {
 		updateShader(&uTime, &uSpeed, start)
 	}
 
+	bgColor = colornames.Black
 	win.Clear(bgColor)
+	title.Color = colornames.White
 	title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, 300)))
 	footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, -300)))
 	txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(txt.Bounds().Center())))
+}
+
+func handleStartSceneInput(win *pixelgl.Window) {
+	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
+		win.SetClosed(true)
+	}
+	if win.JustPressed(pixelgl.KeyEscape) {
+		gameState = "mainMenu"
+	}
+}
+
+func typeStartTitle() {
+	if title.Dot != title.Orig {
+		title.Clear()
+		title.Color = colornames.Darkgoldenrod
+	}
+	titleString := "Welcome to the START. Here is nothing... (yet)!\n"
+	titleString += "Press Ctrl + Q to quit or Escape for main menu."
+	title.WriteString(titleString)
+}
+
+func drawStartScene(win *pixelgl.Window) {
+	bgColor = scene.GetStartBackgroundColor()
+	win.Clear(bgColor)
+	// TODO: I don't think it's a good idea to reuse the title from the demo... is it?
+	title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, 300)))
 }
 
 func gameloop(win *pixelgl.Window) {
@@ -283,7 +317,9 @@ func gameloop(win *pixelgl.Window) {
 		case "mainMenu":
 			gameState = handleMainMenuAndReturnState(win)
 		case "Start":
-			gameState = "Quit"
+			handleStartSceneInput(win)
+			typeStartTitle()
+			drawStartScene(win)
 		case "Demo":
 			handleDemoInput(win, start)
 			drawDemoScene(win, start)
