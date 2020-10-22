@@ -188,11 +188,6 @@ func handleMainMenuAndReturnState(win *pixelgl.Window) string {
 	return "mainMenu"
 }
 
-// TODO: Refactor by making the gameloop function much smaller!
-// Add the variables either unexported or exported (casing) globally
-// Initialize them in an init function
-// Then it's easy to get those lines into smaller functions
-
 func handleDemoInput(win *pixelgl.Window, start time.Time) {
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 		win.SetClosed(true)
