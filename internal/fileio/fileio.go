@@ -1,4 +1,6 @@
-package utils
+// Package fileio implements additional functions to load game specific files
+// like fonts or music
+package fileio
 
 import (
 	"io/ioutil"
@@ -81,24 +83,4 @@ func GetStreamer(filePath string) *effects.Volume {
 	}
 
 	return volume
-}
-
-//Wrapper for volume up
-func VolumeUp( track *effects.Volume) {
-	if track.Silent {
-		track.Volume = 0.5
-		track.Silent = false
-	} else {
-		track.Volume += 0.5
-	}
-}
-
-//Wrapper for volume down
-func VolumeDown(track *effects.Volume) {
-	if track.Volume <= 0.5 {
-		track.Silent = true
-	} else {
-		track.Volume -= 0.5
-	}
-		
 }
