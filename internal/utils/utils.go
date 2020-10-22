@@ -60,7 +60,7 @@ func TtfFromBytesMust(b []byte, size float64) font.Face {
 	})
 }
 
-// GetStreamer had been taken from the pixel Wiki
+// GetStreamer had initially been taken from the pixel Wiki
 func GetStreamer(filePath string) *effects.Volume {
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -81,4 +81,24 @@ func GetStreamer(filePath string) *effects.Volume {
 	}
 
 	return volume
+}
+
+//Wrapper for volume up
+func VolumeUp( track *effects.Volume) {
+	if track.Silent {
+		track.Volume = 0.5
+		track.Silent = false
+	} else {
+		track.Volume += 0.5
+	}
+}
+
+//Wrapper for volume down
+func VolumeDown(track *effects.Volume) {
+	if track.Volume <= 0.5 {
+		track.Silent = true
+	} else {
+		track.Volume -= 0.5
+	}
+		
 }
