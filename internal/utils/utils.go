@@ -83,8 +83,8 @@ func GetStreamer(filePath string) *effects.Volume {
 	return volume
 }
 
-//Wrapper for volume up
-func VolumeUp( track *effects.Volume) {
+// VolumeUp adds linear increments to the float controlling the volume of a track
+func VolumeUp(track *effects.Volume) {
 	if track.Silent {
 		track.Volume = 0.5
 		track.Silent = false
@@ -93,12 +93,11 @@ func VolumeUp( track *effects.Volume) {
 	}
 }
 
-//Wrapper for volume down
+// VolumeDown subtracts linear increments to the float controlling the volume of a track
 func VolumeDown(track *effects.Volume) {
 	if track.Volume <= 0.5 {
 		track.Silent = true
 	} else {
 		track.Volume -= 0.5
 	}
-		
 }
