@@ -5,8 +5,6 @@ import (
 	"image/color"
 	"time"
 
-	"github.com/3ter/iMagine/internal/scene"
-
 	"golang.org/x/image/font"
 
 	"github.com/faiface/beep"
@@ -21,10 +19,13 @@ import (
 
 	"github.com/3ter/iMagine/internal/controlaudio"
 	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/3ter/iMagine/internal/scene"
 )
 
 var (
-	gameState = "mainMenu"
+	gameState     = "mainMenu"
+	prevGameState = ""
+	isSceneSwitch = true
 
 	isMusicPlaying = false
 	trackArray     = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
@@ -43,20 +44,20 @@ var (
 	typed  string
 )
 
-func addStaticText() {
-	// Add text only if it is empty
-	if title.Dot == title.Orig {
-		title.WriteString("Type in anything and press ENTER!\n\n")
-		title.WriteString("CTRL + S: toggle shader\n")
+func writeDemoText() {
+	title.Color = colornames.White
+	footer.Color = colornames.White
 
-		title.WriteString("CTRL + A: play music\n")
-		title.WriteString("CTRL + U, I, O, P: increase volume of music layers\n")
-		title.WriteString("CTRL + J, K, L, O-Umlaut (; for QWERTY): decrease volume of individual tracks")
+	title.Clear()
+	title.WriteString("Type in anything and press ENTER!\n\n")
+	title.WriteString("CTRL + S: toggle shader\n")
 
-	}
-	if footer.Dot == footer.Orig {
-		footer.WriteString("Use the arrow keys to change the background!\n")
-	}
+	title.WriteString("CTRL + A: play music\n")
+	title.WriteString("CTRL + U, I, O, P: increase volume of music layers\n")
+	title.WriteString("CTRL + J, K, L, O-Umlaut (; for QWERTY): decrease volume of individual tracks")
+
+	footer.Clear()
+	footer.WriteString("Use the arrow keys to change the background!\n")
 }
 
 func init() {
@@ -81,8 +82,6 @@ func init() {
 	}
 
 	isShaderApplied = false
-
-	addStaticText()
 }
 
 func convertTextToRGB(txt string) [3]uint8 {
@@ -194,6 +193,11 @@ func handleMainMenuAndReturnState(win *pixelgl.Window) string {
 	return "mainMenu"
 }
 
+func setSceneSwitchTrueInTime(duration time.Duration) {
+	time.Sleep(duration)
+	isSceneSwitch = true
+}
+
 func handleDemoInput(win *pixelgl.Window, start time.Time) {
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 		win.SetClosed(true)
@@ -263,17 +267,21 @@ func handleDemoInput(win *pixelgl.Window, start time.Time) {
 		title.WriteString("That worked quite well! (You can do that again)")
 		typed = ""
 		txt.Clear()
+
+		go setSceneSwitchTrueInTime(2 * time.Second)
 	}
 }
 
 func drawDemoScene(win *pixelgl.Window, start time.Time) {
+	if isSceneSwitch {
+		writeDemoText()
+	}
+
 	if isShaderApplied {
 		updateShader(&uTime, &uSpeed, start)
 	}
 
-	bgColor = colornames.Black
 	win.Clear(bgColor)
-	title.Color = colornames.White
 	title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, 300)))
 	footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, -300)))
 	txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(txt.Bounds().Center())))
@@ -315,14 +323,20 @@ func gameloop(win *pixelgl.Window) {
 		case "Quit":
 			win.SetClosed(true)
 		case "mainMenu":
+			prevGameState = gameState
 			gameState = handleMainMenuAndReturnState(win)
+			isSceneSwitch = (gameState != prevGameState)
 		case "Start":
+			prevGameState = gameState
 			handleStartSceneInput(win)
 			typeStartTitle()
 			drawStartScene(win)
+			isSceneSwitch = (gameState != prevGameState)
 		case "Demo":
+			prevGameState = gameState
 			handleDemoInput(win, start)
 			drawDemoScene(win, start)
+			isSceneSwitch = (gameState != prevGameState)
 		}
 		win.Update()
 		<-fps
