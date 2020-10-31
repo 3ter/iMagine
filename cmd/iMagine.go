@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"time"
 
+	"github.com/3ter/iMagine/internal/controltext"
+
 	"golang.org/x/image/font"
 
 	"github.com/faiface/beep"
@@ -297,13 +299,14 @@ func handleStartSceneInput(win *pixelgl.Window) {
 }
 
 func typeStartTitle() {
-	if title.Dot != title.Orig {
-		title.Clear()
-		title.Color = colornames.Darkgoldenrod
-	}
+	title.Clear()
+	title.Color = colornames.Darkgoldenrod
 	titleString := "Welcome to the START. Here is nothing... (yet)!\n"
-	titleString += "Press Ctrl + Q to quit or Escape for main menu."
-	title.WriteString(titleString)
+	writingDoneChannel := make(chan int)
+	go controltext.WriteToTextLetterByLetter(title, titleString, 60, writingDoneChannel)
+	writingDoneChannel <- 1 // init writing the first line
+	titleString = "Press Ctrl + Q to quit or Escape for main menu."
+	go controltext.WriteToTextLetterByLetter(title, titleString, 20, writingDoneChannel)
 }
 
 func drawStartScene(win *pixelgl.Window) {
@@ -329,7 +332,9 @@ func gameloop(win *pixelgl.Window) {
 		case "Start":
 			prevGameState = gameState
 			handleStartSceneInput(win)
-			typeStartTitle()
+			if isSceneSwitch {
+				typeStartTitle()
+			}
 			drawStartScene(win)
 			isSceneSwitch = (gameState != prevGameState)
 		case "Demo":
