@@ -2,41 +2,51 @@
 // like the backgrounds and texts and music
 package scene
 
-import (
+import(
+
 	"image/color"
-	
-	"github.com/3ter/iMagine/internal/scene"
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
 )
 
+var(
+	BeachScene Scene
+)
+
 // GetStartBackgroundColor is a placeholder... this probably should go somewhere else
-func GetStartBackgroundColor() color.RGBA {
+func getBeachBackgroundColor() color.RGBA {
 	return colornames.Aliceblue
 }
 
 
-func typeStartTitle() {
-	if title.Dot != title.Orig {
-		title.Clear()
-		title.Color = colornames.Darkgoldenrod
+func (s *Scene) TypeBeachTitle() {
+	if s.title.Dot != s.title.Orig {
+		s.title.Clear()
+		s.title.Color = colornames.Darkgoldenrod
 	}
 	titleString := "Welcome to the START. Here is nothing... (yet)!\n"
 	titleString += "Press Ctrl + Q to quit or Escape for main menu."
-	title.WriteString(titleString)
+	titleString += "Press Enter to go to the next area!"
+	s.title.WriteString(titleString)
 }
 
-func drawStartScene(win *pixelgl.Window) {
-	bgColor = scene.GetStartBackgroundColor()
-	win.Clear(bgColor)
-	// TODO: I don't think it's a good idea to reuse the title from the demo... is it?
-	title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(title.Bounds().Center())).Moved(pixel.V(0, 300)))
+func (s *Scene) DrawBeachScene(win *pixelgl.Window) {
+	s.bgColor = getBeachBackgroundColor()
+	win.Clear(s.bgColor)
+	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
 }
 
-func handleStartSceneInput(win *pixelgl.Window) {
+func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) string{
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 		win.SetClosed(true)
 	}
 	if win.JustPressed(pixelgl.KeyEscape) {
 		gameState = "mainMenu"
 	}
+	if win.JustPressed(pixelgl.KeyEnter) {
+		gameState = "Forest"
+	}
+
+	return gameState
 }

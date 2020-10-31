@@ -2,39 +2,44 @@ package scene
  
 import (
     //"image/color"
-    //"fmt"
+	//"fmt"
+	"time"
+	"image/color"
+	"github.com/faiface/pixel/pixelgl"
+
 	"golang.org/x/image/font"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
-	"golang.org/x/image/colornames"
-	"golang.org/x/image/font/gofont/gobold"
-	"golang.org/x/image/font/gofont/goregular"
+	
 
-	"github.com/3ter/iMagine/internal/controlaudio"
+	//"golang.org/x/image/font/gofont/gobold"
+	//"golang.org/x/image/font/gofont/goregular"
+
+	//"github.com/3ter/iMagine/internal/controlaudio"
 	"github.com/3ter/iMagine/internal/fileio"
 )
 
 
-
+//Scene contains basic settings and assets (font, music, shaders, content)
 type Scene struct {
 	
-    bgColor         = colornames.Black
-    fragmentShader  = fileio.LoadFileToString("../assets/wavy_shader.glsl")
-    uTime, uSpeed   float32
-    isShaderApplied bool
+    bgColor color.RGBA//= colornames.Black
+    fragmentShader string// =fileio.LoadFileToString("../assets/wavy_shader.glsl")
+	uTime, uSpeed float32
+	isShaderApplied bool
 
-    face   font.Face
-    txt    *text.Text
-    title  *text.Text
-    footer *text.Text
+    face  font.Face
+    txt, title, footer   *text.Text
     typed  string
 
+	trackMap       map[int]*effects.Volume
+	sceneSwitch bool
 }
+
 
 /*
 var (
@@ -42,6 +47,7 @@ var (
     fragmentShader  = fileio.LoadFileToString("../assets/wavy_shader.glsl")
     uTime, uSpeed   float32
     isShaderApplied bool
+	isSceneSwitch = true
 
     face   font.Face
     txt    *text.Text
@@ -51,7 +57,7 @@ var (
 )
 */
 
-func (s *Scene) convertTextToRGB(txt string) [3]uint8 {
+func convertTextToRGB(txt string) [3]uint8 {
 	var rgb = [3]uint8{0, 0, 0}
 
 	for pos, char := range txt {
@@ -68,17 +74,26 @@ func (s *Scene) convertTextToRGB(txt string) [3]uint8 {
 	return rgb
 }
 
-func (s *Scene) toggleMusic(streamer beep.StreamSeekCloser) {
+
+func (s *Scene) setSceneSwitchTrueInTime(duration time.Duration) {
+	time.Sleep(duration)
+	s.sceneSwitch = true
+}
+
+
+func toggleMusic(streamer beep.StreamSeekCloser) {
 
 	speaker.Play(streamer)
 
 }
 
+//TODO
 func applyShader(win *pixelgl.Window, start time.Time) {
-	win.Canvas().SetUniform("uTime", &uTime)
-	win.Canvas().SetUniform("uSpeed", &uSpeed)
-	win.Canvas().SetFragmentShader(fragmentShader)
+	//win.Canvas().SetUniform("uTime", &uTime)
+	//win.Canvas().SetUniform("uSpeed", &uSpeed)
+	//win.Canvas().SetFragmentShader(fragmentShader)
 }
+
 
 func updateShader(uTime *float32, uSpeed *float32, start time.Time) {
 	*uSpeed = 5.0
@@ -86,39 +101,33 @@ func updateShader(uTime *float32, uSpeed *float32, start time.Time) {
 }
 
 
- /*
-func (s *Scene) init() int {
-    return p.Sides
-}
- 
-type Triangle struct {
-    Polygon // anonymous field
-}
- */
-
-
-
-func (s *Scene) init() {
+func (s *Scene) Init() {
 	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
 	}
 
 	atlas := text.NewAtlas(face, text.ASCII)
-	txt = text.New(pixel.V(100, 500), atlas)
-	title = text.New(pixel.ZV, atlas)
-	footer = text.New(pixel.ZV, atlas)
+	s.txt = text.New(pixel.V(100, 500), atlas)
+	s.title = text.New(pixel.ZV, atlas)
+	s.footer = text.New(pixel.ZV, atlas)
 
-	trackMap = make(map[int]*effects.Volume)
-	for index, element := range trackArray {
+	
+	s.trackMap = make(map[int]*effects.Volume)
+
+	/*
+	for index, element := range s.trackArray {
 		fmt.Println(index, trackPath, element)
 		var streamer = fileio.GetStreamer(trackPath + element)
-		trackMap[index] = streamer
+		s.trackMap[index] = streamer
 
 		//TODO: Why is this commented out?
 		//defer streamer.Close()
 	}
+	*/
 
-	isShaderApplied = false
+	//TODO Apply shader
+	//isShaderApplied = false
+	
 }
 

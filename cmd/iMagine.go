@@ -5,28 +5,34 @@ import (
 	
 	"time"
 	"github.com/faiface/pixel/pixelgl"
-
-	"github.com/3ter/iMagine/internal/scene/sceneMain"
-	"github.com/3ter/iMagine/internal/scene/sceneDemo"
+	"github.com/faiface/pixel"
+	"github.com/3ter/iMagine/internal/scene"
+	
 
 )
 
 var (
 	gameState     = "mainMenu"
 	prevGameState = ""
-	isSceneSwitch = true
 )
 
 
 
-func setSceneSwitchTrueInTime(duration time.Duration) {
-	time.Sleep(duration)
-	isSceneSwitch = true
-}
-
 func gameloop(win *pixelgl.Window) {
 	fps := time.Tick(time.Second / 120) // 120 FPS provide a very smooth typing experience
 	start := time.Now()
+
+	var demoScene = scene.DemoScene
+	var beachScene = scene.BeachScene
+	var mainScene = scene.MainScene
+	var forestScene = scene.ForestScene
+	demoScene.Init()
+	demoScene.InitDemoScene()
+	beachScene.Init()
+	mainScene.Init()
+	forestScene.Init()
+	//scene.DemoScene.Init()
+	//scene.BeachScene.Init()
 
 	for !win.Closed() {
 
@@ -35,23 +41,35 @@ func gameloop(win *pixelgl.Window) {
 			win.SetClosed(true)
 		case "mainMenu":
 			prevGameState = gameState
-			main := sceneMain{}
-			gameState = main.handleMainMenuAndReturnState(win)
-			isSceneSwitch = (gameState != prevGameState)
-/*
+
+			gameState = mainScene.HandleMainMenuAndReturnState(win)
+			//var isSceneSwitch = (gameState != prevGameState)
+			//fmt.Println(isSceneSwitch)
+		
+
 		case "Start":
 			prevGameState = gameState
-			handleStartSceneInput(win)
-			typeStartTitle()
-			drawStartScene(win)
-			isSceneSwitch = (gameState != prevGameState)
+			gameState = beachScene.HandleBeachSceneInput(win, gameState)
+			beachScene.TypeBeachTitle()
+			beachScene.DrawBeachScene(win)
+			//isSceneSwitch = (gameState != prevGameState)
+
+		case "Forest":
+			prevGameState = gameState
+			gameState = forestScene.HandleForestSceneInput(win, gameState)
+			forestScene.TypeForestTitle()
+			forestScene.DrawForestScene(win)
+		
 		case "Demo":
 			prevGameState = gameState
-			handleDemoInput(win, start)
-			drawDemoScene(win, start)
-			isSceneSwitch = (gameState != prevGameState)
+			gameState = demoScene.HandleDemoInput(win, start)
+			demoScene.DrawDemoScene(win, start)
+			//var isSceneSwitch = (gameState != prevGameState)
+
+
+			
 		}
-*/		
+		
 		win.Update()
 		<-fps
 	}

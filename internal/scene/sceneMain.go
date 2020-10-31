@@ -1,11 +1,26 @@
 //Main Scene
 package scene
 
-import "github.com/3ter/iMagine/internal/scene/Scene"
+import(
+
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
+	"golang.org/x/image/colornames"
+	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/faiface/pixel/text"
+	"golang.org/x/image/font/gofont/gobold"
+	"golang.org/x/image/font/gofont/goregular"
+)
+
+
+var(
+	//MainScene
+	MainScene Scene
+)
 
 func drawMainMenu(win *pixelgl.Window, atlasRegular, atlasBold *text.Atlas) {
-	bgColor = colornames.Black
-	win.Clear(bgColor)
+	MainScene.bgColor = colornames.Black
+	win.Clear(MainScene.bgColor)
 
 	menuTextVerticalOffset := 50 // pixels
 
@@ -17,7 +32,8 @@ func drawMainMenu(win *pixelgl.Window, atlasRegular, atlasBold *text.Atlas) {
 	}
 }
 
-func handleMainMenuAndReturnState(win *pixelgl.Window) string {
+//Switch to the Main Menu
+func (s *Scene) HandleMainMenuAndReturnState(win *pixelgl.Window) string {
 
 	regularFace := fileio.TtfFromBytesMust(goregular.TTF, 20)
 	boldFace := fileio.TtfFromBytesMust(gobold.TTF, 20)
@@ -63,6 +79,7 @@ type mainMenuItem struct {
 var menuItems = []*mainMenuItem{
 	&mainMenuItem{"Demo", "selected"},
 	&mainMenuItem{"Start", "unselected"},
+	&mainMenuItem{"Forest", "unselected"},
 	&mainMenuItem{"Quit", "unselected"}}
 
 func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
