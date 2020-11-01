@@ -13,9 +13,9 @@ import(
 	"golang.org/x/image/colornames"
 	"github.com/3ter/iMagine/internal/fileio"
 )
-//import "github.com/3ter/iMagine/internal/scene/Scene"
 
 var (
+	//DemoScene contains all 
 	DemoScene Scene
 	
 	isMusicPlaying = false

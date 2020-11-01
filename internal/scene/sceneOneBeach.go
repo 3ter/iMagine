@@ -8,6 +8,7 @@ import(
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
+	"github.com/3ter/iMagine/internal/controltext"
 )
 
 var(
@@ -20,16 +21,24 @@ func getBeachBackgroundColor() color.RGBA {
 }
 
 
+
+
 func (s *Scene) TypeBeachTitle() {
-	if s.title.Dot != s.title.Orig {
-		s.title.Clear()
-		s.title.Color = colornames.Darkgoldenrod
-	}
+
+
+	s.title.Clear()
+	s.title.Color = colornames.Darkgoldenrod
 	titleString := "Welcome to the START. Here is nothing... (yet)!\n"
-	titleString += "Press Ctrl + Q to quit or Escape for main menu."
-	titleString += "Press Enter to go to the next area!"
-	s.title.WriteString(titleString)
+	writingDoneChannel := make(chan int)
+	go controltext.WriteToTextLetterByLetter(s.title, titleString, 60, writingDoneChannel)
+	writingDoneChannel <- 1 // init writing the first line
+	titleString = "Press Ctrl + Q to quit or Escape for main menu.\n"
+	go controltext.WriteToTextLetterByLetter(s.title, titleString, 10, writingDoneChannel)
+	titleString = "Press Enter to go to the next area!"
+	go controltext.WriteToTextLetterByLetter(s.title, titleString, 10, writingDoneChannel)
+
 }
+
 
 func (s *Scene) DrawBeachScene(win *pixelgl.Window) {
 	s.bgColor = getBeachBackgroundColor()
