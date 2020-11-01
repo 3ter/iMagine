@@ -2,21 +2,18 @@ package main
 
 import (
 	//"fmt"
-	
-	"time"
-	"github.com/faiface/pixel/pixelgl"
-	"github.com/faiface/pixel"
-	"github.com/3ter/iMagine/internal/scene"
-	
 
+	"time"
+
+	"github.com/3ter/iMagine/internal/scene"
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 )
 
 var (
 	gameState     = "mainMenu"
 	prevGameState = ""
 )
-
-
 
 func gameloop(win *pixelgl.Window) {
 	fps := time.Tick(time.Second / 120) // 120 FPS provide a very smooth typing experience
@@ -50,12 +47,11 @@ func gameloop(win *pixelgl.Window) {
 		case "Start":
 			prevGameState = gameState
 			gameState = beachScene.HandleBeachSceneInput(win, gameState)
-			if(isSceneSwitch){
+			if isSceneSwitch {
 				beachScene.TypeBeachTitle()
 			}
 			beachScene.DrawBeachScene(win)
 			isSceneSwitch = (gameState != prevGameState)
-
 
 		case "Forest":
 			prevGameState = gameState
@@ -69,11 +65,8 @@ func gameloop(win *pixelgl.Window) {
 			gameState = demoScene.HandleDemoInput(win, start)
 			demoScene.DrawDemoScene(win, start)
 			isSceneSwitch = (gameState != prevGameState)
-
-
-			
 		}
-		
+
 		win.Update()
 		<-fps
 	}
@@ -81,7 +74,7 @@ func gameloop(win *pixelgl.Window) {
 
 func run() {
 	cfg := pixelgl.WindowConfig{
-		Title: "Pixel Rocks!",
+		Title:  "Pixel Rocks!",
 		Bounds: pixel.R(0, 0, 1024, 768),
 		// VSync:  true,
 	}
