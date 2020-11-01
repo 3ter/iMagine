@@ -2,16 +2,17 @@
 // like the backgrounds and texts and music
 package scene
 
-import(
-
+import (
 	"image/color"
+
+	"github.com/3ter/iMagine/internal/controltext"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
-	"github.com/3ter/iMagine/internal/controltext"
 )
 
-var(
+var (
+	// BeachScene holds the texts and music in its Scene struct.
 	BeachScene Scene
 )
 
@@ -20,11 +21,10 @@ func getBeachBackgroundColor() color.RGBA {
 	return colornames.Aliceblue
 }
 
-
-
-
+// TypeBeachTitle prints the text to the respective text elements.
+// TODO: This should use pixelgl's typed like in the demo and do something on
+// an answer.
 func (s *Scene) TypeBeachTitle() {
-
 
 	s.title.Clear()
 	s.title.Color = colornames.Darkgoldenrod
@@ -39,14 +39,15 @@ func (s *Scene) TypeBeachTitle() {
 
 }
 
-
+// DrawBeachScene draws background and text to the window.
 func (s *Scene) DrawBeachScene(win *pixelgl.Window) {
 	s.bgColor = getBeachBackgroundColor()
 	win.Clear(s.bgColor)
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
 }
 
-func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) string{
+// HandleBeachSceneInput listens and processes player input.
+func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) string {
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 		win.SetClosed(true)
 	}

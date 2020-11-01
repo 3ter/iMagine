@@ -30,8 +30,6 @@ func gameloop(win *pixelgl.Window) {
 	beachScene.Init()
 	mainScene.Init()
 	forestScene.Init()
-	//scene.DemoScene.Init()
-	//scene.BeachScene.Init()
 
 	for !win.Closed() {
 
@@ -76,7 +74,6 @@ func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Pixel Rocks!",
 		Bounds: pixel.R(0, 0, 1024, 768),
-		// VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {

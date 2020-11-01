@@ -21,12 +21,12 @@ import (
 // the baton to start writing.
 //
 // Example 1
-//  titleString := "Welcome to the START. Here is nothing... (yet)!\n"
+//  msg := "Some text\n"
 //  writingDoneChannel := make(chan int)
-//  go controltext.WriteToTextLetterByLetter(s.title, titleString, 60, writingDoneChannel)
+//  go controltext.WriteToTextLetterByLetter(s.title, msg, 60, writingDoneChannel)
 //  writingDoneChannel <- 1 // init writing the first line
-//  titleString = "Press Ctrl + Q to quit or Escape for main menu.\n"
-//  go controltext.WriteToTextLetterByLetter(s.title, titleString, 10, writingDoneChannel)
+//  msg = "Press Ctrl + Q to quit or Escape for main menu.\n"
+//  go controltext.WriteToTextLetterByLetter(s.title, msg, 10, writingDoneChannel)
 func WriteToTextLetterByLetter(txt *text.Text, msg string, interval time.Duration, writingDoneChannel chan int) {
 	<-writingDoneChannel
 	for _, char := range msg {
