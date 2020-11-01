@@ -15,7 +15,7 @@ import(
 )
 
 var (
-	//DemoScene contains all 
+	//DemoScene contains samples of all core functionalities
 	DemoScene Scene
 	
 	isMusicPlaying = false
@@ -90,8 +90,8 @@ func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string{
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyS) {
 		// TODO: Make it a toggle (set a default fragment shader..?)
-		//DemoScene.applyShader(win, start)
-		//var isShaderApplied = true
+		s.applyShader(win, start)
+		s.isShaderApplied = true
 	}
 
 	if win.Pressed(pixelgl.KeyDown) {
@@ -143,11 +143,12 @@ func (s *Scene) DrawDemoScene(win *pixelgl.Window, start time.Time) {
 		writeDemoText()
 	}
 */
-/*
+
 	if s.isShaderApplied {
-		s.updateShader(&uTime, &uSpeed, start)
+		s.updateShader(start)
+		fmt.Println("Updating Shader...")
 	}
-*/
+
 	s.writeDemoText()
 	win.Clear(s.bgColor)
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))

@@ -84,10 +84,10 @@ func toggleMusic(streamer beep.StreamSeekCloser) {
 }
 
 // TODO: Add the commands back in.
-func applyShader(win *pixelgl.Window, start time.Time) {
-	//win.Canvas().SetUniform("uTime", &uTime)
-	//win.Canvas().SetUniform("uSpeed", &uSpeed)
-	//win.Canvas().SetFragmentShader(fragmentShader)
+func (s *Scene) applyShader(win *pixelgl.Window, start time.Time) {
+	win.Canvas().SetUniform("uTime", s.uTime)
+	win.Canvas().SetUniform("uSpeed", s.uSpeed)
+	win.Canvas().SetFragmentShader(fragmentShader)
 }
 
 func updateShader(uTime *float32, uSpeed *float32, start time.Time) {
@@ -111,6 +111,10 @@ func (s *Scene) Init() {
 
 	// TODO: This is probably here because there was the intent to make this generally available vs
 	// declaring it in every scene anew.
+	s.fragmentShader = fileio.LoadFileToString("../assets/wavy_shader.glsl")
+	//TODO: Apply shader
+	s.isShaderApplied = false
+
 	/*
 		for index, element := range s.trackArray {
 			fmt.Println(index, trackPath, element)
@@ -122,6 +126,5 @@ func (s *Scene) Init() {
 		}
 	*/
 
-	//TODO: Apply shader
-	//isShaderApplied = false
+	
 }
