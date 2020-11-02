@@ -26,7 +26,7 @@ var (
 	//trackMap       map[int]*effects.Volume
 )
 
-//Load all assets for the scene
+// InitDemoScene loads all assets for the scene
 func (s *Scene) InitDemoScene() {
 
 	var trackArray = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
@@ -39,6 +39,7 @@ func (s *Scene) InitDemoScene() {
 	}
 }
 
+// HandleDemoInput listens and processes player input.
 func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
 
 	var gameState = "Demo"
