@@ -27,15 +27,15 @@ import (
 type Scene struct {
 	bgColor         color.RGBA //= colornames.Black
 	fragmentShader  string     // =fileio.LoadFileToString("../assets/wavy_shader.glsl")
-	uTime, uSpeed   float32
+	uTime, uSpeed   float32    // pointers to the two uniforms used by fragment shaders
 	isShaderApplied bool
 
 	face               font.Face
 	txt, title, footer *text.Text
 	typed              string
 
-	trackMap    map[int]*effects.Volume
-	sceneSwitch bool
+	trackMap      map[int]*effects.Volume
+	isSceneSwitch bool
 }
 
 // TODO: This has probably been copied here as a reference.
@@ -74,7 +74,7 @@ func convertTextToRGB(txt string) [3]uint8 {
 
 func (s *Scene) setSceneSwitchTrueInTime(duration time.Duration) {
 	time.Sleep(duration)
-	s.sceneSwitch = true
+	s.isSceneSwitch = true
 }
 
 func toggleMusic(streamer beep.StreamSeekCloser) {
@@ -83,16 +83,15 @@ func toggleMusic(streamer beep.StreamSeekCloser) {
 
 }
 
-// TODO: Add the commands back in.
 func (s *Scene) applyShader(win *pixelgl.Window, start time.Time) {
-	win.Canvas().SetUniform("uTime", s.uTime)
-	win.Canvas().SetUniform("uSpeed", s.uSpeed)
-	win.Canvas().SetFragmentShader(fragmentShader)
+	win.Canvas().SetUniform("uTime", &(s.uTime))
+	win.Canvas().SetUniform("uSpeed", &(s.uSpeed))
+	win.Canvas().SetFragmentShader(s.fragmentShader)
 }
 
-func updateShader(uTime *float32, uSpeed *float32, start time.Time) {
-	*uSpeed = 5.0
-	*uTime = float32(time.Since(start).Seconds())
+func (s *Scene) updateShader(uSpeed float32, start time.Time) {
+	s.uSpeed = uSpeed
+	s.uTime = float32(time.Since(start).Seconds())
 }
 
 // Init loads text and music into the Scene struct.
@@ -109,10 +108,8 @@ func (s *Scene) Init() {
 
 	s.trackMap = make(map[int]*effects.Volume)
 
-	// TODO: This is probably here because there was the intent to make this generally available vs
-	// declaring it in every scene anew.
 	s.fragmentShader = fileio.LoadFileToString("../assets/wavy_shader.glsl")
-	//TODO: Apply shader
+	s.uSpeed = 5.0
 	s.isShaderApplied = false
 
 	/*
@@ -126,5 +123,4 @@ func (s *Scene) Init() {
 		}
 	*/
 
-	
 }

@@ -1,35 +1,36 @@
-//Demo Scene to test basic capabilities we need
+// Package scene implements a small demo to test basic capabilities we need
 package scene
-import(
+
+import (
 	"fmt"
-	"time"
 	"image/color"
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
+	"time"
+
 	"github.com/3ter/iMagine/internal/controlaudio"
+	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
-	"github.com/faiface/beep"
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
-	"github.com/3ter/iMagine/internal/fileio"
 )
 
 var (
 	//DemoScene contains samples of all core functionalities
 	DemoScene Scene
-	
+
 	isMusicPlaying = false
 	//trackArray     = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
 	//trackPath      = "../assets/"
 	//trackMap       map[int]*effects.Volume
 )
 
-
 //Load all assets for the scene
-func (s *Scene) InitDemoScene(){
+func (s *Scene) InitDemoScene() {
 
-	var trackArray     = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
-	var trackPath      = "../assets/"
+	var trackArray = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
+	var trackPath = "../assets/"
 	s.trackMap = make(map[int]*effects.Volume)
 	for index, element := range trackArray {
 		fmt.Println(index, trackPath, element)
@@ -38,10 +39,7 @@ func (s *Scene) InitDemoScene(){
 	}
 }
 
-
-
-func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string{
-	
+func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
 
 	var gameState = "Demo"
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
@@ -135,18 +133,14 @@ func (s *Scene) writeDemoText() {
 	s.footer.WriteString("Use the arrow keys to change the background!\n")
 }
 
-
-
-
+// DrawDemoScene draws background and text to the window.
 func (s *Scene) DrawDemoScene(win *pixelgl.Window, start time.Time) {
-/*	if isSceneSwitch {
-		writeDemoText()
+	if s.isSceneSwitch {
+		s.writeDemoText()
 	}
-*/
 
 	if s.isShaderApplied {
-		s.updateShader(start)
-		fmt.Println("Updating Shader...")
+		s.updateShader(s.uSpeed, start)
 	}
 
 	s.writeDemoText()
