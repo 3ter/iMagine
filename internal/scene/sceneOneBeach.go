@@ -24,6 +24,8 @@ func getBeachBackgroundColor() color.RGBA {
 // TypeBeachTitle prints the text to the respective text elements.
 // TODO: This should use pixelgl's typed like in the demo and do something on
 // an answer.
+// TODO: may want to add a writetotextletterbyletter in the demo scene so all features
+// are in one place.
 func (s *Scene) TypeBeachTitle() {
 
 	s.title.Clear()

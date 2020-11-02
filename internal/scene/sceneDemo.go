@@ -21,9 +21,6 @@ var (
 	DemoScene Scene
 
 	isMusicPlaying = false
-	//trackArray     = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
-	//trackPath      = "../assets/"
-	//trackMap       map[int]*effects.Volume
 )
 
 // InitDemoScene loads all assets for the scene
@@ -83,6 +80,7 @@ func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyA) {
+		//TODO: This should be a toggle as well.
 		allStreamer := beep.Mix(s.trackMap[0], s.trackMap[1], s.trackMap[2], s.trackMap[3])
 		speaker.Play(allStreamer)
 	}

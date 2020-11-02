@@ -14,7 +14,7 @@ import(
 
 
 var(
-	//MainScene
+	//MainScene with the main menu
 	MainScene Scene
 )
 
@@ -32,7 +32,7 @@ func drawMainMenu(win *pixelgl.Window, atlasRegular, atlasBold *text.Atlas) {
 	}
 }
 
-//Switch to the Main Menu
+//HandleMainMenuAndReturnState handles menu items and the associated states
 func (s *Scene) HandleMainMenuAndReturnState(win *pixelgl.Window) string {
 
 	regularFace := fileio.TtfFromBytesMust(goregular.TTF, 20)

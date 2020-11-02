@@ -87,6 +87,7 @@ func (s *Scene) applyShader(win *pixelgl.Window, start time.Time) {
 	win.Canvas().SetUniform("uTime", &(s.uTime))
 	win.Canvas().SetUniform("uSpeed", &(s.uSpeed))
 	win.Canvas().SetFragmentShader(s.fragmentShader)
+	win.Canvas()
 }
 
 func (s *Scene) updateShader(uSpeed float32, start time.Time) {
@@ -94,7 +95,7 @@ func (s *Scene) updateShader(uSpeed float32, start time.Time) {
 	s.uTime = float32(time.Since(start).Seconds())
 }
 
-// Init loads text and music into the Scene struct.
+// Init loads text and music into the Scene struct. 
 func (s *Scene) Init() {
 	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
@@ -111,16 +112,5 @@ func (s *Scene) Init() {
 	s.fragmentShader = fileio.LoadFileToString("../assets/wavy_shader.glsl")
 	s.uSpeed = 5.0
 	s.isShaderApplied = false
-
-	/*
-		for index, element := range s.trackArray {
-			fmt.Println(index, trackPath, element)
-			var streamer = fileio.GetStreamer(trackPath + element)
-			s.trackMap[index] = streamer
-
-			//TODO: Why is this commented out?
-			//defer streamer.Close()
-		}
-	*/
 
 }
