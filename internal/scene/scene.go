@@ -35,7 +35,7 @@ type Scene struct {
 	typed              string
 
 	trackMap      map[int]*effects.Volume
-	isSceneSwitch bool
+	IsSceneSwitch bool
 }
 
 // TODO: This has probably been copied here as a reference.
@@ -45,7 +45,7 @@ var (
     fragmentShader  = fileio.LoadFileToString("../assets/wavy_shader.glsl")
     uTime, uSpeed   float32
     isShaderApplied bool
-	isSceneSwitch = true
+	IsSceneSwitch = true
 
     face   font.Face
     txt    *text.Text
@@ -74,7 +74,7 @@ func convertTextToRGB(txt string) [3]uint8 {
 
 func (s *Scene) setSceneSwitchTrueInTime(duration time.Duration) {
 	time.Sleep(duration)
-	s.isSceneSwitch = true
+	s.IsSceneSwitch = true
 }
 
 func toggleMusic(streamer beep.StreamSeekCloser) {
@@ -112,4 +112,5 @@ func (s *Scene) Init() {
 	s.uSpeed = 5.0
 	s.isShaderApplied = false
 
+	s.IsSceneSwitch = true
 }

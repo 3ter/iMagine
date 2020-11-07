@@ -105,7 +105,8 @@ func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
 		// Mind that GLFW doesn't support {Enter} (and {Tab}) (yet)
 		// txt.WriteRune('\n')
 		s.title.Clear()
-		rgb := convertTextToRGB(DemoScene.typed)
+		rgb := convertTextToRGB(s.typed)
+		// TODO: Fix convertTextToRGB function (at the moment it's pretty black)
 		s.title.Color = color.RGBA{rgb[0], rgb[1], rgb[2], 0xff}
 		s.title.WriteString("That worked quite well! (You can do that again)")
 		s.typed = ""
@@ -134,7 +135,7 @@ func (s *Scene) writeDemoText() {
 
 // DrawDemoScene draws background and text to the window.
 func (s *Scene) DrawDemoScene(win *pixelgl.Window, start time.Time) {
-	if s.isSceneSwitch {
+	if s.IsSceneSwitch {
 		s.writeDemoText()
 	}
 
@@ -142,7 +143,6 @@ func (s *Scene) DrawDemoScene(win *pixelgl.Window, start time.Time) {
 		s.updateShader(s.uSpeed, start)
 	}
 
-	s.writeDemoText()
 	win.Clear(s.bgColor)
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
 	s.footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, -300)))

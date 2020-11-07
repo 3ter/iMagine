@@ -38,7 +38,6 @@ func (s *Scene) TypeBeachTitle() {
 	go controltext.WriteToTextLetterByLetter(s.title, titleString, 10, writingDoneChannel)
 	titleString = "Press Enter to go to the next area!"
 	go controltext.WriteToTextLetterByLetter(s.title, titleString, 10, writingDoneChannel)
-
 }
 
 // DrawBeachScene draws background and text to the window.
