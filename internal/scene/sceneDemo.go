@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/3ter/iMagine/internal/controlaudio"
+	"github.com/3ter/iMagine/internal/controltext"
 	"github.com/3ter/iMagine/internal/fileio"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
@@ -121,15 +122,30 @@ func (s *Scene) writeDemoText() {
 	s.footer.Color = colornames.White
 
 	s.title.Clear()
-	s.title.WriteString("Type in anything and press ENTER!\n\n")
-	s.title.WriteString("CTRL + S: toggle shader\n")
+	s.title.WriteString("\n\nSHADER\n")
+	s.title.WriteString("CTRL + S: toggle shader\n\n")
 
+	s.title.WriteString("MUSIC\n")
 	s.title.WriteString("CTRL + A: play music\n")
 	s.title.WriteString("CTRL + U, I, O, P: increase volume of music layers\n")
-	s.title.WriteString("CTRL + J, K, L, O-Umlaut (; for QWERTY): decrease volume of individual tracks")
+	s.title.WriteString("CTRL + J, K, L, O-Umlaut (; for QWERTY): decrease volume of individual tracks\n\n")
+
+	s.title.WriteString("TYPING\n")
+	s.title.WriteString("Type in anything and press ENTER!\n")
 
 	s.footer.Clear()
-	s.footer.WriteString("Use the arrow keys to change the background!\n")
+
+	s.footer.WriteString("BG COLOR\n")
+	s.footer.WriteString("Use the UP and DOWN arrow keys to change the background!\n")
+
+	writingDoneChannel := make(chan int)
+	var revealedText = "Here is some gradually revealed text."
+	go controltext.WriteToTextLetterByLetter(s.footer, revealedText, 60, writingDoneChannel)
+	writingDoneChannel <- 1 // init writing the first line
+
+	revealedText = "Quite thrilling."
+	go controltext.WriteToTextLetterByLetter(s.footer, revealedText, 10, writingDoneChannel)
+
 }
 
 // DrawDemoScene draws background and text to the window.
@@ -144,7 +160,7 @@ func (s *Scene) DrawDemoScene(win *pixelgl.Window, start time.Time) {
 
 	s.writeDemoText()
 	win.Clear(s.bgColor)
-	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
-	s.footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, -300)))
-	s.txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.txt.Bounds().Center())))
+	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 250)))
+	s.footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, -150)))
+	s.txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.txt.Bounds().Center())).Moved(pixel.V(0, 50)))
 }
