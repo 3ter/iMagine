@@ -2,7 +2,6 @@
 package scene
 
 import (
-	"fmt"
 	"image/color"
 	"time"
 
@@ -31,14 +30,16 @@ func (s *Scene) InitDemoScene() {
 	var trackPath = "../assets/"
 	s.trackMap = make(map[int]*effects.Volume)
 	for index, element := range trackArray {
-		fmt.Println(index, trackPath, element)
+		//fmt.Println(index, trackPath, element)
 		var streamer = fileio.GetStreamer(trackPath + element)
 		s.trackMap[index] = streamer
 	}
 }
 
 // HandleDemoInput listens and processes player input.
-func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
+func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time, isSceneSwitch bool) string {
+
+	s.isSceneSwitch = isSceneSwitch
 
 	var gameState = "Demo"
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
@@ -118,6 +119,7 @@ func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
 }
 
 func (s *Scene) writeDemoText() {
+
 	s.title.Color = colornames.White
 	s.footer.Color = colornames.White
 
@@ -136,20 +138,24 @@ func (s *Scene) writeDemoText() {
 	s.footer.Clear()
 
 	s.footer.WriteString("BG COLOR\n")
-	s.footer.WriteString("Use the UP and DOWN arrow keys to change the background!\n")
+	s.footer.WriteString("Use the UP and DOWN arrow keys to change the background!\n\n")
+	s.footer.WriteString("REVEALED TEXT\n")
 
 	writingDoneChannel := make(chan int)
-	var revealedText = "Here is some gradually revealed text."
+	var revealedText = "Here is some gradually revealed text.\n"
 	go controltext.WriteToTextLetterByLetter(s.footer, revealedText, 60, writingDoneChannel)
 	writingDoneChannel <- 1 // init writing the first line
 
-	revealedText = "Quite thrilling."
+	revealedText = "Fast reveal, quite thrilling. \n"
 	go controltext.WriteToTextLetterByLetter(s.footer, revealedText, 10, writingDoneChannel)
+	revealedText = "This text will be revealed slooooooooooooooooooooowly."
+	go controltext.WriteToTextLetterByLetter(s.footer, revealedText, 100, writingDoneChannel)
 
 }
 
 // DrawDemoScene draws background and text to the window.
 func (s *Scene) DrawDemoScene(win *pixelgl.Window, start time.Time) {
+
 	if s.isSceneSwitch {
 		s.writeDemoText()
 	}
@@ -158,7 +164,6 @@ func (s *Scene) DrawDemoScene(win *pixelgl.Window, start time.Time) {
 		s.updateShader(s.uSpeed, start)
 	}
 
-	s.writeDemoText()
 	win.Clear(s.bgColor)
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 250)))
 	s.footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, -150)))

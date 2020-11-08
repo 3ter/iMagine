@@ -60,9 +60,10 @@ func gameloop(win *pixelgl.Window) {
 
 		case "Demo":
 			prevGameState = gameState
-			gameState = demoScene.HandleDemoInput(win, start)
+			gameState = demoScene.HandleDemoInput(win, start, isSceneSwitch)
 			demoScene.DrawDemoScene(win, start)
 			isSceneSwitch = (gameState != prevGameState)
+
 		}
 
 		win.Update()
