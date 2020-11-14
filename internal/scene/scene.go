@@ -23,6 +23,8 @@ import (
 	"github.com/3ter/iMagine/internal/fileio"
 )
 
+var player Player
+
 // Scene contains basic settings and assets (font, music, shaders, content)
 type Scene struct {
 	bgColor         color.RGBA //= colornames.Black
@@ -36,6 +38,11 @@ type Scene struct {
 
 	trackMap      map[int]*effects.Volume
 	IsSceneSwitch bool
+}
+
+// This is called once when the package is imported for the first time
+func init() {
+	player.setDefaultAttributes()
 }
 
 // TODO: This has probably been copied here as a reference.

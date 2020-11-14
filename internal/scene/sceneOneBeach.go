@@ -45,6 +45,8 @@ func (s *Scene) DrawBeachScene(win *pixelgl.Window) {
 	s.bgColor = getBeachBackgroundColor()
 	win.Clear(s.bgColor)
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
+
+	player.drawTextInBox(win)
 }
 
 // HandleBeachSceneInput listens and processes player input.

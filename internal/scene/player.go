@@ -5,6 +5,8 @@ package scene
 import (
 	"image/color"
 
+	"github.com/faiface/pixel/pixelgl"
+
 	"github.com/faiface/pixel"
 
 	"github.com/3ter/iMagine/internal/fileio"
@@ -24,11 +26,12 @@ type Player struct {
 	currentTextObject *text.Text
 	currentTextString string
 
-	textBox TextBox
+	textBox *TextBox
 
 	wordInventory []string
 }
 
+// SetDefaultAttributes initializes the Player struct
 func (p *Player) setDefaultAttributes() {
 	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
@@ -38,6 +41,12 @@ func (p *Player) setDefaultAttributes() {
 	// pixel.ZV is the zero vector representing the orig(in) (i.e. beginning of the line)
 	p.currentTextObject = text.New(pixel.ZV, text.NewAtlas(face, text.ASCII))
 	p.setTextColor(color.White)
+
+	p.textBox = new(TextBox)
+	// TODO: Find a good way to know the window dimensions here...
+	p.textBox.dimensions = pixel.V(900, 100)
+	p.textBox.topLeftCorner = pixel.V(1024/2-p.textBox.dimensions.X/2, 768-p.textBox.dimensions.Y-400)
+	p.textBox.thickness = 10
 }
 
 func (p *Player) setTextFontFace(face font.Face) {
@@ -59,7 +68,7 @@ func (p *Player) addText(str string) {
 	p.currentTextObject.WriteString(str)
 }
 
-func (p *Player) drawTextInBox() {
-	p.textBox.drawTextBox()
-
+func (p *Player) drawTextInBox(win *pixelgl.Window) {
+	p.textBox.drawTextBox(win)
+	// TODO: Draw text
 }

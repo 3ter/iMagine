@@ -8,6 +8,11 @@ import (
 	"github.com/3ter/iMagine/internal/scene"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+
+	// import package purely for its initialization side effects.
+	// see https://golang.org/pkg/image
+	_ "image/jpeg"
+	_ "image/png"
 )
 
 var (
