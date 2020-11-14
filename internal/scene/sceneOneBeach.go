@@ -61,5 +61,8 @@ func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) str
 		gameState = "Forest"
 	}
 
+	player.currentTextString += win.Typed()
+	player.currentTextObject.WriteString(win.Typed())
+
 	return gameState
 }

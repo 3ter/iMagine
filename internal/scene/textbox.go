@@ -3,10 +3,10 @@
 package scene
 
 import (
-	"github.com/3ter/iMagine/internal/fileio"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
+	"golang.org/x/image/colornames"
 )
 
 // TextBox has dimensions and coordinates where it is drawn
@@ -18,16 +18,10 @@ type TextBox struct {
 }
 
 func (box *TextBox) drawTextBox(win *pixelgl.Window) {
-	texture, err := fileio.LoadPicture("../assets/lavaTexture.jpg")
-	if err != nil {
-		panic(err)
-	}
-	imd := imdraw.New(texture)
-	imd.Intensity = 1.0
-	imd.Picture = box.topLeftCorner
-	imd.Push(box.topLeftCorner)
-	imd.Picture = box.topLeftCorner.Add(box.dimensions)
-	imd.Push(box.topLeftCorner.Add(pixel.V(box.dimensions.X, box.dimensions.Y)))
+	imd := imdraw.New(nil)
+	imd.Color = colornames.Red
+	imd.Push(box.topLeftCorner.Add(pixel.V(0, -box.dimensions.Y)))
+	imd.Push(box.topLeftCorner.Add(pixel.V(box.dimensions.X, 0)))
 	imd.Rectangle(box.thickness)
 	imd.Draw(win)
 }

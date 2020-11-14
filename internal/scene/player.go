@@ -5,6 +5,8 @@ package scene
 import (
 	"image/color"
 
+	"golang.org/x/image/colornames"
+
 	"github.com/faiface/pixel/pixelgl"
 
 	"github.com/faiface/pixel"
@@ -40,13 +42,13 @@ func (p *Player) setDefaultAttributes() {
 	p.fontFace = face
 	// pixel.ZV is the zero vector representing the orig(in) (i.e. beginning of the line)
 	p.currentTextObject = text.New(pixel.ZV, text.NewAtlas(face, text.ASCII))
-	p.setTextColor(color.White)
+	p.setTextColor(colornames.Blueviolet)
 
 	p.textBox = new(TextBox)
 	// TODO: Find a good way to know the window dimensions here...
-	p.textBox.dimensions = pixel.V(900, 100)
-	p.textBox.topLeftCorner = pixel.V(1024/2-p.textBox.dimensions.X/2, 768-p.textBox.dimensions.Y-400)
-	p.textBox.thickness = 10
+	p.textBox.dimensions = pixel.V(900, 230)
+	p.textBox.topLeftCorner = pixel.V(1024/2-p.textBox.dimensions.X/2, 768-500)
+	p.textBox.thickness = 5
 }
 
 func (p *Player) setTextFontFace(face font.Face) {
@@ -70,5 +72,10 @@ func (p *Player) addText(str string) {
 
 func (p *Player) drawTextInBox(win *pixelgl.Window) {
 	p.textBox.drawTextBox(win)
-	// TODO: Draw text
+
+	// margin to the text box in pixels
+	margin := 20.0
+	// TODO: The y coordinate is guesswork and dependend on the font face used!
+	marginVec := pixel.V(margin, margin-55)
+	p.currentTextObject.Draw(win, pixel.IM.Moved(p.textBox.topLeftCorner.Add(marginVec)))
 }
