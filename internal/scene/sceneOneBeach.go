@@ -47,6 +47,7 @@ func (s *Scene) DrawBeachScene(win *pixelgl.Window) {
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
 
 	player.drawTextInBox(win)
+	narrator.drawTextInBox(win)
 }
 
 // HandleBeachSceneInput listens and processes player input.
