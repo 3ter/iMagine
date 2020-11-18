@@ -24,6 +24,7 @@ import (
 )
 
 var player Player
+var window *pixelgl.Window
 
 // Scene contains basic settings and assets (font, music, shaders, content)
 type Scene struct {
@@ -43,6 +44,11 @@ type Scene struct {
 // This is called once when the package is imported for the first time
 func init() {
 	player.setDefaultAttributes()
+}
+
+// SetWindowForAllScenes initializes the global window variable for all scenes
+func SetWindowForAllScenes(win *pixelgl.Window) {
+	window = win
 }
 
 // TODO: This has probably been copied here as a reference.

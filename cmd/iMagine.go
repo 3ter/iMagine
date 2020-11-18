@@ -1,8 +1,6 @@
 package main
 
 import (
-	//"fmt"
-
 	"time"
 
 	"github.com/3ter/iMagine/internal/scene"
@@ -23,6 +21,8 @@ var (
 func gameloop(win *pixelgl.Window) {
 	fps := time.Tick(time.Second / 120) // 120 FPS provide a very smooth typing experience
 	start := time.Now()
+
+	scene.SetWindowForAllScenes(win)
 
 	var demoScene = scene.DemoScene
 	var beachScene = scene.BeachScene

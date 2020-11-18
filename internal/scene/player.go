@@ -46,6 +46,7 @@ func (p *Player) setDefaultAttributes() {
 
 	p.textBox = new(TextBox)
 	// TODO: Find a good way to know the window dimensions here...
+	// I've used a potential hack, now we only have to use 'window' here to get relative bounds
 	p.textBox.dimensions = pixel.V(900, 230)
 	p.textBox.topLeftCorner = pixel.V(1024/2-p.textBox.dimensions.X/2, 768-500)
 	p.textBox.thickness = 5
