@@ -40,6 +40,8 @@ type Scene struct {
 
 	trackMap      map[int]*effects.Volume
 	IsSceneSwitch bool
+
+	sceneProgress string
 }
 
 // This is called once when the package is imported for the first time
@@ -128,4 +130,6 @@ func (s *Scene) Init() {
 	s.isShaderApplied = false
 
 	s.IsSceneSwitch = true
+
+	s.sceneProgress = "beginning"
 }

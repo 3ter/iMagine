@@ -45,13 +45,14 @@ func gameloop(win *pixelgl.Window) {
 			gameState = mainScene.HandleMainMenuAndReturnState(win)
 
 		case "Start":
-			prevGameState = gameState
+			// TODO: I suppose we don't need the IsSceneSwitch any more. The package handles its own states.
+			// prevGameState = gameState
 			gameState = beachScene.HandleBeachSceneInput(win, gameState)
-			if beachScene.IsSceneSwitch {
-				beachScene.TypeBeachTitle()
-			}
+			// if beachScene.IsSceneSwitch {
+			// 	beachScene.TypeBeachTitle()
+			// }
 			beachScene.DrawBeachScene(win)
-			beachScene.IsSceneSwitch = (gameState != prevGameState)
+			// beachScene.IsSceneSwitch = (gameState != prevGameState)
 
 		case "Forest":
 			prevGameState = gameState

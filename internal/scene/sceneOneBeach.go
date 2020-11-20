@@ -59,11 +59,35 @@ func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) str
 		gameState = "mainMenu"
 	}
 	if win.JustPressed(pixelgl.KeyEnter) {
-		gameState = "Forest"
+		s.handlePlayerCommand()
 	}
 
 	player.currentTextString += win.Typed()
 	player.currentTextObject.WriteString(win.Typed())
 
 	return gameState
+}
+
+// handlePlayerCommand takes the currently written word(s) and save them
+// distinguish cases: words are this, then write this
+// Move forward/backward in story accordingly to case (story_progress)
+func (s *Scene) handlePlayerCommand() {
+
+	var playerText string
+	var narratorText string
+
+	switch s.sceneProgress {
+	case "beginning":
+		narratorText = `You open your eyes.
+You find yourself at a beach. You hear the waves come and go, the red sunset reflects on the water’s surface.
+As the sunlight falls, a shiny reflection catches your eye.`
+		s.sceneProgress = `compass 1`
+	case `compass 1`:
+		narratorText = `You walk closer to whatever it is that caught your eye. It was glass that reflected sunlight into your eyes. Glass that belonged to a little device. A compass.`
+	}
+
+	narrator.currentTextObject.Clear()
+	narrator.currentTextObject.WriteString(narratorText)
+	player.currentTextObject.Clear()
+	player.currentTextObject.WriteString(playerText)
 }
