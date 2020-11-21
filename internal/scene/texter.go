@@ -4,6 +4,7 @@ package scene
 
 import (
 	"image/color"
+	"regexp"
 
 	"github.com/faiface/pixel/pixelgl"
 
@@ -34,21 +35,60 @@ func (t *Texter) setTextColor(col color.Color) {
 	t.currentTextObject.Color = col
 }
 
+func (t *Texter) getWrappedString(str string) string {
+	maxTextWidth := t.textBox.dimensions.X - t.textBox.margin - 20
+
+	m := regexp.MustCompile(`\n`) // GoogleDocs uses LF to mark its line endings
+	currLinesSlice := m.Split(str, -1)
+	var wrappedString string
+	for idx, currLine := range currLinesSlice {
+		if t.currentTextObject.BoundsOf(str).W() <= maxTextWidth {
+			wrappedString = str
+			break
+		}
+		if t.currentTextObject.BoundsOf(currLine).W() <= maxTextWidth {
+			if idx < len(currLinesSlice)-1 {
+				wrappedString += currLine + "\n"
+			} else {
+				wrappedString += currLine
+			}
+			continue
+		}
+		newLineBreakIndex := int((maxTextWidth) * (float64(len(currLine))) / t.currentTextObject.BoundsOf(currLine).W())
+		lastSpaceMatch := regexp.MustCompile(` [^ ]*?$`)
+		if lastSpaceMatch.FindStringIndex(currLine[:newLineBreakIndex]) != nil {
+			newLineBreakIndex = lastSpaceMatch.FindStringIndex(currLine[:newLineBreakIndex])[0]
+		}
+		if idx < len(currLinesSlice)-1 {
+			wrappedString += currLine[:newLineBreakIndex] + "\n" + currLine[newLineBreakIndex+1:] + " "
+		} else {
+			wrappedString += currLine[:newLineBreakIndex] + "\n" + currLine[newLineBreakIndex+1:]
+		}
+	}
+
+	return wrappedString
+}
+
 func (t *Texter) setText(str string) {
+	wrappedString := t.getWrappedString(str)
+
+	t.currentTextString = wrappedString
 	t.currentTextObject.Clear()
-	t.currentTextObject.WriteString(str)
+	t.currentTextObject.WriteString(wrappedString)
 }
 
 func (t *Texter) addText(str string) {
-	t.currentTextObject.WriteString(str)
+	wrappedString := t.getWrappedString(t.currentTextString + str)
+
+	t.currentTextString = wrappedString
+	t.currentTextObject.Clear()
+	t.currentTextObject.WriteString(wrappedString)
 }
 
 func (t *Texter) drawTextInBox(win *pixelgl.Window) {
 	t.textBox.drawTextBox(win)
 
-	// margin to the text box in pixels
-	margin := 20.0
-	// TODO: The y coordinate is guesswork and dependend on the font face used!
-	marginVec := pixel.V(margin, margin-55)
+	// TODO: The y coordinate is guesswork and probably dependend on the font face used!
+	marginVec := pixel.V(t.textBox.margin, t.textBox.margin-t.textBox.thickness-2.4*t.currentTextObject.LineHeight)
 	t.currentTextObject.Draw(win, pixel.IM.Moved(t.textBox.topLeftCorner.Add(marginVec)))
 }

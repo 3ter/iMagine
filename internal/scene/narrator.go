@@ -36,4 +36,5 @@ func (n *Narrator) setDefaultAttributes() {
 	n.textBox.dimensions = pixel.V(900, 230)
 	n.textBox.topLeftCorner = pixel.V(1024/2-n.textBox.dimensions.X/2, 768-100)
 	n.textBox.thickness = 5
+	n.textBox.margin = 20
 }

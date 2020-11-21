@@ -39,4 +39,5 @@ func (p *Player) setDefaultAttributes() {
 	p.textBox.dimensions = pixel.V(900, 230)
 	p.textBox.topLeftCorner = pixel.V(1024/2-p.textBox.dimensions.X/2, 768-500)
 	p.textBox.thickness = 5
+	p.textBox.margin = 20
 }

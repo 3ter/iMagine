@@ -62,8 +62,9 @@ func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) str
 		s.handlePlayerCommand()
 	}
 
-	player.currentTextString += win.Typed()
-	player.currentTextObject.WriteString(win.Typed())
+	if len(win.Typed()) > 0 {
+		player.addText(win.Typed())
+	}
 
 	return gameState
 }
@@ -79,15 +80,17 @@ func (s *Scene) handlePlayerCommand() {
 	switch s.sceneProgress {
 	case "beginning":
 		narratorText = `You open your eyes.
-You find yourself at a beach. You hear the waves come and go, the red sunset reflects on the water’s surface.
+You find yourself at a beach. You hear the waves come and go, the red sunset reflects on the water's surface.
 As the sunlight falls, a shiny reflection catches your eye.`
-		s.sceneProgress = `compass 1`
+		if player.currentTextString == `inspect reflection` {
+			s.sceneProgress = `compass 1`
+			s.handlePlayerCommand()
+			return
+		}
 	case `compass 1`:
 		narratorText = `You walk closer to whatever it is that caught your eye. It was glass that reflected sunlight into your eyes. Glass that belonged to a little device. A compass.`
 	}
 
-	narrator.currentTextObject.Clear()
-	narrator.currentTextObject.WriteString(narratorText)
-	player.currentTextObject.Clear()
-	player.currentTextObject.WriteString(playerText)
+	narrator.setText(narratorText)
+	player.setText(playerText)
 }

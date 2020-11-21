@@ -15,6 +15,8 @@ type TextBox struct {
 	dimensions    pixel.Vec
 	topLeftCorner pixel.Vec
 	thickness     float64
+	// margin of the text to the edges of the text box in pixels
+	margin float64
 }
 
 func (box *TextBox) drawTextBox(win *pixelgl.Window) {
