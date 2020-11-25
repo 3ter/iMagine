@@ -69,9 +69,7 @@ func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) str
 	return gameState
 }
 
-// handlePlayerCommand takes the currently written word(s) and save them
-// distinguish cases: words are this, then write this
-// Move forward/backward in story accordingly to case (story_progress)
+// handlePlayerCommand sets both player and narrator text to be drawn afterwards.
 func (s *Scene) handlePlayerCommand() {
 
 	var playerText string
