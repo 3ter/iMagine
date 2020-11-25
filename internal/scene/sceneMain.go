@@ -1,19 +1,18 @@
-//Main Scene
+// Package scene implements functions to provide the contents of a scene
+// like the backgrounds and texts and music.
 package scene
 
-import(
-
+import (
+	"github.com/3ter/iMagine/internal/fileio"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
-	"golang.org/x/image/colornames"
-	"github.com/3ter/iMagine/internal/fileio"
 	"github.com/faiface/pixel/text"
+	"golang.org/x/image/colornames"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/goregular"
 )
 
-
-var(
+var (
 	//MainScene with the main menu
 	MainScene Scene
 )
