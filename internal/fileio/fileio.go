@@ -3,6 +3,7 @@
 package fileio
 
 import (
+	"image"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/vorbis"
+	"github.com/faiface/pixel"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 )
@@ -83,4 +85,19 @@ func GetStreamer(filePath string) *effects.Volume {
 	}
 
 	return volume
+}
+
+// LoadPicture has been copied from
+// https://github.com/faiface/pixel/wiki/Drawing-a-Sprite
+func LoadPicture(path string) (pixel.Picture, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, err
+	}
+	return pixel.PictureDataFromImage(img), nil
 }

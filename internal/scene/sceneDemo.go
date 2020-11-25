@@ -37,9 +37,7 @@ func (s *Scene) InitDemoScene() {
 }
 
 // HandleDemoInput listens and processes player input.
-func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time, isSceneSwitch bool) string {
-
-	s.isSceneSwitch = isSceneSwitch
+func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
 
 	var gameState = "Demo"
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
@@ -107,7 +105,8 @@ func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time, isSceneSwi
 		// Mind that GLFW doesn't support {Enter} (and {Tab}) (yet)
 		// txt.WriteRune('\n')
 		s.title.Clear()
-		rgb := convertTextToRGB(DemoScene.typed)
+		rgb := convertTextToRGB(s.typed)
+		// TODO: Fix convertTextToRGB function (at the moment it's pretty black)
 		s.title.Color = color.RGBA{rgb[0], rgb[1], rgb[2], 0xff}
 		s.title.WriteString("That worked quite well! (You can do that again)")
 		s.typed = ""
@@ -155,8 +154,7 @@ func (s *Scene) writeDemoText() {
 
 // DrawDemoScene draws background and text to the window.
 func (s *Scene) DrawDemoScene(win *pixelgl.Window, start time.Time) {
-
-	if s.isSceneSwitch {
+	if s.IsSceneSwitch {
 		s.writeDemoText()
 	}
 

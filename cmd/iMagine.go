@@ -1,13 +1,16 @@
 package main
 
 import (
-	//"fmt"
-
 	"time"
 
 	"github.com/3ter/iMagine/internal/scene"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+
+	// import package purely for its initialization side effects.
+	// see https://golang.org/pkg/image
+	_ "image/jpeg"
+	_ "image/png"
 )
 
 var (
@@ -19,7 +22,7 @@ func gameloop(win *pixelgl.Window) {
 	fps := time.Tick(time.Second / 120) // 120 FPS provide a very smooth typing experience
 	start := time.Now()
 
-	var isSceneSwitch = true
+	scene.SetWindowForAllScenes(win)
 
 	var demoScene = scene.DemoScene
 	var beachScene = scene.BeachScene
@@ -40,30 +43,23 @@ func gameloop(win *pixelgl.Window) {
 			prevGameState = gameState
 
 			gameState = mainScene.HandleMainMenuAndReturnState(win)
-			isSceneSwitch = (gameState != prevGameState)
 
 		case "Start":
-			prevGameState = gameState
 			gameState = beachScene.HandleBeachSceneInput(win, gameState)
-			if isSceneSwitch {
-				beachScene.TypeBeachTitle()
-			}
 			beachScene.DrawBeachScene(win)
-			isSceneSwitch = (gameState != prevGameState)
 
 		case "Forest":
 			prevGameState = gameState
 			gameState = forestScene.HandleForestSceneInput(win, gameState)
 			forestScene.TypeForestTitle()
 			forestScene.DrawForestScene(win)
-			isSceneSwitch = (gameState != prevGameState)
+			forestScene.IsSceneSwitch = (gameState != prevGameState)
 
 		case "Demo":
 			prevGameState = gameState
-			gameState = demoScene.HandleDemoInput(win, start, isSceneSwitch)
+			gameState = demoScene.HandleDemoInput(win, start)
 			demoScene.DrawDemoScene(win, start)
-			isSceneSwitch = (gameState != prevGameState)
-
+			demoScene.IsSceneSwitch = (gameState != prevGameState)
 		}
 
 		win.Update()

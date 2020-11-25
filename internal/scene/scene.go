@@ -23,6 +23,10 @@ import (
 	"github.com/3ter/iMagine/internal/fileio"
 )
 
+var player Player
+var narrator Narrator
+var window *pixelgl.Window
+
 // Scene contains basic settings and assets (font, music, shaders, content)
 type Scene struct {
 	bgColor         color.RGBA //= colornames.Black
@@ -35,7 +39,20 @@ type Scene struct {
 	typed              string
 
 	trackMap      map[int]*effects.Volume
-	isSceneSwitch bool
+	IsSceneSwitch bool
+
+	sceneProgress string
+}
+
+// This is called once when the package is imported for the first time
+func init() {
+	player.setDefaultAttributes()
+	narrator.setDefaultAttributes()
+}
+
+// SetWindowForAllScenes initializes the global window variable for all scenes
+func SetWindowForAllScenes(win *pixelgl.Window) {
+	window = win
 }
 
 func convertTextToRGB(txt string) [3]uint8 {
@@ -57,7 +74,7 @@ func convertTextToRGB(txt string) [3]uint8 {
 
 func (s *Scene) setSceneSwitchTrueInTime(duration time.Duration) {
 	time.Sleep(duration)
-	s.isSceneSwitch = true
+	s.IsSceneSwitch = true
 }
 
 func toggleMusic(streamer beep.StreamSeekCloser) {
@@ -95,4 +112,7 @@ func (s *Scene) Init() {
 	s.uSpeed = 5.0
 	s.isShaderApplied = false
 
+	s.IsSceneSwitch = true
+
+	s.sceneProgress = "beginning"
 }

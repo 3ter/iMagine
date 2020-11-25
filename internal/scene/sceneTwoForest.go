@@ -2,15 +2,15 @@
 // like the backgrounds and texts and music
 package scene
 
-import(
-
+import (
 	"image/color"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
 )
 
-var(
+var (
 	ForestScene Scene
 )
 
@@ -18,7 +18,6 @@ var(
 func getForestBackgroundColor() color.RGBA {
 	return colornames.Forestgreen
 }
-
 
 func (s *Scene) TypeForestTitle() {
 	if s.title.Dot != s.title.Orig {
@@ -36,7 +35,7 @@ func (s *Scene) DrawForestScene(win *pixelgl.Window) {
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
 }
 
-func (s *Scene) HandleForestSceneInput(win *pixelgl.Window, gameState string) string{
+func (s *Scene) HandleForestSceneInput(win *pixelgl.Window, gameState string) string {
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 		win.SetClosed(true)
 	}

@@ -38,7 +38,6 @@ func (s *Scene) TypeBeachTitle() {
 	go controltext.WriteToTextLetterByLetter(s.title, titleString, 10, writingDoneChannel)
 	titleString = "Press Enter to go to the next area!"
 	go controltext.WriteToTextLetterByLetter(s.title, titleString, 10, writingDoneChannel)
-
 }
 
 // DrawBeachScene draws background and text to the window.
@@ -46,6 +45,9 @@ func (s *Scene) DrawBeachScene(win *pixelgl.Window) {
 	s.bgColor = getBeachBackgroundColor()
 	win.Clear(s.bgColor)
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
+
+	player.drawTextInBox(win)
+	narrator.drawTextInBox(win)
 }
 
 // HandleBeachSceneInput listens and processes player input.
@@ -57,8 +59,36 @@ func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) str
 		gameState = "mainMenu"
 	}
 	if win.JustPressed(pixelgl.KeyEnter) {
-		gameState = "Forest"
+		s.handlePlayerCommand()
+	}
+
+	if len(win.Typed()) > 0 {
+		player.addText(win.Typed())
 	}
 
 	return gameState
+}
+
+// handlePlayerCommand sets both player and narrator text to be drawn afterwards.
+func (s *Scene) handlePlayerCommand() {
+
+	var playerText string
+	var narratorText string
+
+	switch s.sceneProgress {
+	case "beginning":
+		narratorText = `You open your eyes.
+You find yourself at a beach. You hear the waves come and go, the red sunset reflects on the water's surface.
+As the sunlight falls, a shiny reflection catches your eye.`
+		if player.currentTextString == `inspect reflection` {
+			s.sceneProgress = `compass 1`
+			s.handlePlayerCommand()
+			return
+		}
+	case `compass 1`:
+		narratorText = `You walk closer to whatever it is that caught your eye. It was glass that reflected sunlight into your eyes. Glass that belonged to a little device. A compass.`
+	}
+
+	narrator.setText(narratorText)
+	player.setText(playerText)
 }

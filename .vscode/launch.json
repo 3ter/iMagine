@@ -5,6 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch iMagine from cmd",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/iMagine.go",
+            "env": {},
+            "args": []
+        },
+        {
             "name": "Launch",
             "type": "go",
             "request": "launch",
