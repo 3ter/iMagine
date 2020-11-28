@@ -55,23 +55,6 @@ func SetWindowForAllScenes(win *pixelgl.Window) {
 	window = win
 }
 
-// TODO: This has probably been copied here as a reference.
-/*
-var (
-    bgColor         = colornames.Black
-    fragmentShader  = fileio.LoadFileToString("../assets/wavy_shader.glsl")
-    uTime, uSpeed   float32
-    isShaderApplied bool
-	IsSceneSwitch = true
-
-    face   font.Face
-    txt    *text.Text
-    title  *text.Text
-    footer *text.Text
-    typed  string
-)
-*/
-
 func convertTextToRGB(txt string) [3]uint8 {
 	var rgb = [3]uint8{0, 0, 0}
 
