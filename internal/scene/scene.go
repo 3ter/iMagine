@@ -4,6 +4,8 @@ import (
 	"image/color"
 	"time"
 
+	"github.com/3ter/iMagine/internal/controltext"
+
 	"github.com/faiface/pixel/pixelgl"
 
 	"golang.org/x/image/font"
@@ -35,7 +37,7 @@ type Scene struct {
 	isShaderApplied bool
 
 	face               font.Face
-	txt, title, footer *text.Text
+	txt, title, footer *controltext.SafeText
 	typed              string
 
 	trackMap      map[int]*effects.Volume
@@ -102,9 +104,18 @@ func (s *Scene) Init() {
 	}
 
 	atlas := text.NewAtlas(face, text.ASCII)
-	s.txt = text.New(pixel.V(100, 500), atlas)
-	s.title = text.New(pixel.ZV, atlas)
-	s.footer = text.New(pixel.ZV, atlas)
+	txt := text.New(pixel.V(100, 500), atlas)
+	title := text.New(pixel.ZV, atlas)
+	footer := text.New(pixel.ZV, atlas)
+	s.txt = &controltext.SafeText{
+		Text: txt,
+	}
+	s.title = &controltext.SafeText{
+		Text: title,
+	}
+	s.footer = &controltext.SafeText{
+		Text: footer,
+	}
 
 	s.trackMap = make(map[int]*effects.Volume)
 
