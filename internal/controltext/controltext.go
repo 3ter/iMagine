@@ -3,10 +3,25 @@
 package controltext
 
 import (
+	"sync"
 	"time"
 
 	"github.com/faiface/pixel/text"
 )
+
+// SafeText adds a mutex to a text to control access to the text object
+//
+// This adds a little complexity to the creation of those objects.
+//
+// Example 1
+// txt := text.Text.New(vec, atlas)
+// safeTxt := SafeText{
+// 	*text.Text: txt
+// }
+type SafeText struct {
+	*text.Text
+	sync.Mutex
+}
 
 // WriteToTextLetterByLetter accepts a text object that is filled with the provided message
 // letter by letter so the eyes can follow as the text is being written.
@@ -27,8 +42,9 @@ import (
 //  writingDoneChannel <- 1 // init writing the first line
 //  msg = "Press Ctrl + Q to quit or Escape for main menu.\n"
 //  go controltext.WriteToTextLetterByLetter(s.title, msg, 10, writingDoneChannel)
-func WriteToTextLetterByLetter(txt *text.Text, msg string, interval time.Duration, writingDoneChannel chan int) {
+func WriteToTextLetterByLetter(txt *SafeText, msg string, interval time.Duration, writingDoneChannel chan int) {
 	<-writingDoneChannel
+	txt.Lock()
 	for _, char := range msg {
 		_, err := txt.WriteString(string(char))
 		if err != nil {
@@ -36,6 +52,7 @@ func WriteToTextLetterByLetter(txt *text.Text, msg string, interval time.Duratio
 		}
 		time.Sleep(interval * time.Millisecond)
 	}
+	txt.Unlock()
 	writingDoneChannel <- 1
 	return
 }
