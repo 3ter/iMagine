@@ -104,17 +104,14 @@ func (s *Scene) Init() {
 	}
 
 	atlas := text.NewAtlas(face, text.ASCII)
-	txt := text.New(pixel.V(100, 500), atlas)
-	title := text.New(pixel.ZV, atlas)
-	footer := text.New(pixel.ZV, atlas)
 	s.txt = &controltext.SafeText{
-		Text: txt,
+		Text: text.New(pixel.ZV, atlas),
 	}
 	s.title = &controltext.SafeText{
-		Text: title,
+		Text: text.New(pixel.ZV, atlas),
 	}
 	s.footer = &controltext.SafeText{
-		Text: footer,
+		Text: text.New(pixel.ZV, atlas),
 	}
 
 	s.trackMap = make(map[int]*effects.Volume)
