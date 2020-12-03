@@ -14,6 +14,8 @@ import (
 var (
 	// BeachScene holds the texts and music in its Scene struct.
 	BeachScene Scene
+	// To make a continuous press of backspace possible.
+	backspaceCounter int
 )
 
 // GetStartBackgroundColor is a placeholder... this probably should go somewhere else
@@ -50,6 +52,20 @@ func (s *Scene) DrawBeachScene(win *pixelgl.Window) {
 	narrator.drawTextInBox(win)
 }
 
+func handleBackspace(win *pixelgl.Window, player *Player) {
+	if win.JustPressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
+		player.setText(player.currentTextString[:len(player.currentTextString)-1])
+		backspaceCounter = int(-120 * 0.5) // Framerate times seconds to wait until continuous backspace kicks in.
+	} else if win.Pressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
+		backspaceCounter++
+		backspaceDeletionSpeed := int(120 / 40) // Framerate divided by deletions per second.
+		if backspaceCounter > 0 && backspaceCounter%backspaceDeletionSpeed == 0 {
+			player.setText(player.currentTextString[:len(player.currentTextString)-1])
+			backspaceCounter = 0
+		}
+	}
+}
+
 // HandleBeachSceneInput listens and processes player input.
 func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) string {
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
@@ -58,6 +74,7 @@ func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) str
 	if win.JustPressed(pixelgl.KeyEscape) {
 		gameState = "mainMenu"
 	}
+	handleBackspace(win, &player)
 	if win.JustPressed(pixelgl.KeyEnter) {
 		s.handlePlayerCommand()
 	}
