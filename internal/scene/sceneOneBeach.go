@@ -4,6 +4,7 @@ package scene
 
 import (
 	"image/color"
+	"regexp"
 
 	"github.com/3ter/iMagine/internal/controltext"
 	"github.com/faiface/pixel"
@@ -76,7 +77,9 @@ func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) str
 	}
 	handleBackspace(win, &player)
 	if win.JustPressed(pixelgl.KeyEnter) {
-		s.handlePlayerCommand()
+		// TODO: Remove old command if fully replaced
+		// s.handlePlayerCommand()
+		s.enactScriptFile()
 	}
 
 	if len(win.Typed()) > 0 {
@@ -92,13 +95,13 @@ func (s *Scene) handlePlayerCommand() {
 	var playerText string
 	var narratorText string
 
-	switch s.sceneProgress {
+	switch s.progress {
 	case "beginning":
 		narratorText = `You open your eyes.
 You find yourself at a beach. You hear the waves come and go, the red sunset reflects on the water's surface.
 As the sunlight falls, a shiny reflection catches your eye.`
 		if player.currentTextString == `inspect reflection` {
-			s.sceneProgress = `compass 1`
+			s.progress = `compass 1`
 			s.handlePlayerCommand()
 			return
 		}
@@ -108,4 +111,66 @@ As the sunlight falls, a shiny reflection catches your eye.`
 
 	narrator.setText(narratorText)
 	player.setText(playerText)
+}
+
+func (s *Scene) enactScriptFile() {
+	var activeScript string
+
+	// Find currently active script part and remove progress line
+	hashRegexp := regexp.MustCompile(`^#+`)
+	scriptParts := hashRegexp.Split(s.scriptFile, -1)
+	progressRegexp := regexp.MustCompile(s.progress)
+	for _, scriptPart := range scriptParts {
+		if progressRegexp.MatchString(scriptPart) {
+			untilFirstLineEndRegexp := regexp.MustCompile(`^\s\w+\n`)
+			activeScript = untilFirstLineEndRegexp.Split(scriptPart, 2)[1]
+			break
+		}
+	}
+
+	// Separate directives (ambience / text / keywords) by a blank line
+	blankLineRegexp := regexp.MustCompile(`\n\n`)
+	activeScriptSlice := blankLineRegexp.Split(activeScript, -1)
+
+	var ambienceCmdSlice []string
+	// var playerCmdSlice []string // the positins in the script need to be saved, so multiple lines can follow a player cmd
+	var narratorTxtSlice []string
+
+	// A player cmd is mapped onto another map containing narrator text, ambience directives or progress updates
+	var playerCmdToResponseMap map[string]map[string]string
+
+	var submatchSlice []string
+	for lineNumber, scriptLine := range activeScriptSlice {
+		// Get ambience directives
+		ambienceCmdMarkerRegexp := regexp.MustCompile("^`[(.+)]`$")
+		submatchSlice = ambienceCmdMarkerRegexp.FindStringSubmatch(scriptLine)
+		if len(submatchSlice) > 0 {
+			ambienceCmdSlice = append(ambienceCmdSlice, submatchSlice[1])
+		}
+
+		// Get player command directives
+		playerCmdMarkerRegexp := regexp.MustCompile("^`\\((.+)\\)(?: > (.+))?`$")
+		submatchSlice = playerCmdMarkerRegexp.FindStringSubmatch(scriptLine)
+		var playerCmd string
+		if len(submatchSlice) > 0 {
+			playerCmd = submatchSlice[1]
+		}
+		if len(submatchSlice) == 1 {
+			for _, narratorTextLine := range activeScriptSlice[lineNumber:] {
+				cmdMarkerRegexp := regexp.MustCompile("^`")
+				if cmdMarkerRegexp.MatchString(narratorTextLine) {
+					break
+				} else {
+					narratorTxtSlice = append(narratorTxtSlice, narratorTextLine)
+				}
+			}
+			playerCmdToResponseMap[playerCmd] = map[string]string{"narratorText": narratorTxtSlice}
+		} else if len(submatchSlice) == 2 {
+			playerCmdToResponseMap[playerCmd] = map[string]string{"progress": submatchSlice[2]}
+		}
+	}
+	// Execute ambience directives
+	// Get player keywords
+	// Check if progress change
+	// Set narrator text
 }
