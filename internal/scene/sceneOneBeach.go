@@ -119,7 +119,7 @@ func (s *Scene) enactScriptFile() {
 
 	// Find currently active script part and remove progress line
 	hashRegexp := regexp.MustCompile(`(?m:^# )`)
-	scriptParts := hashRegexp.Split(s.scriptFile, -1)
+	scriptParts := hashRegexp.Split(s.script.file, -1)
 	progressRegexp := regexp.MustCompile(`^` + s.progress)
 	for _, scriptPart := range scriptParts {
 		if progressRegexp.MatchString(scriptPart) {

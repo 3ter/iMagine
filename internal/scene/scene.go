@@ -43,8 +43,13 @@ type Scene struct {
 	trackMap      map[int]*effects.Volume
 	IsSceneSwitch bool
 
-	scriptFile    string
+	script   Script
 	progress string
+}
+
+// Script groups all info from the (markdown) script to make it available to functions within a scene
+type Script struct {
+	file string
 }
 
 // This is called once when the package is imported for the first time
@@ -129,5 +134,5 @@ func (s *Scene) Init() {
 // InitWithFile initializes a scene using a scene script file which then should be parsed.
 func (s *Scene) InitWithFile(scriptFilepath string) {
 	s.Init()
-	s.scriptFile = fileio.LoadFileToString(scriptFilepath)
+	s.script.file = fileio.LoadFileToString(scriptFilepath)
 }
