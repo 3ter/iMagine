@@ -5,6 +5,7 @@ package scene
 import (
 	"image/color"
 	"regexp"
+	"strings"
 
 	"github.com/3ter/iMagine/internal/controltext"
 	"github.com/faiface/pixel"
@@ -117,12 +118,12 @@ func (s *Scene) enactScriptFile() {
 	var activeScript string
 
 	// Find currently active script part and remove progress line
-	hashRegexp := regexp.MustCompile(`^#+`)
+	hashRegexp := regexp.MustCompile(`(?m:^# )`)
 	scriptParts := hashRegexp.Split(s.scriptFile, -1)
-	progressRegexp := regexp.MustCompile(s.progress)
+	progressRegexp := regexp.MustCompile(`^` + s.progress)
 	for _, scriptPart := range scriptParts {
 		if progressRegexp.MatchString(scriptPart) {
-			untilFirstLineEndRegexp := regexp.MustCompile(`^\s\w+\n`)
+			untilFirstLineEndRegexp := regexp.MustCompile(`^\w+\n`)
 			activeScript = untilFirstLineEndRegexp.Split(scriptPart, 2)[1]
 			break
 		}
@@ -131,46 +132,69 @@ func (s *Scene) enactScriptFile() {
 	// Separate directives (ambience / text / keywords) by a blank line
 	blankLineRegexp := regexp.MustCompile(`\n\n`)
 	activeScriptSlice := blankLineRegexp.Split(activeScript, -1)
+	activeScriptSlice = activeScriptSlice[:len(activeScriptSlice)-1] // to remove last element (empty string)
 
 	var ambienceCmdSlice []string
-	// var playerCmdSlice []string // the positins in the script need to be saved, so multiple lines can follow a player cmd
-	var narratorTxtSlice []string
+	var narratorTextSlice []string
 
-	// A player cmd is mapped onto another map containing narrator text, ambience directives or progress updates
-	var playerCmdToResponseMap map[string]map[string]string
+	// A player cmd is mapped onto a struct containing narrator text lines, ambience directives or progress updates
+	type narratorResponse struct {
+		progressUpdate    string
+		narratorTextLines []string
+		ambienceCmd       string
+	}
+	var playerCmdToResponseMap = make(map[string]narratorResponse)
 
 	var submatchSlice []string
 	for lineNumber, scriptLine := range activeScriptSlice {
 		// Get ambience directives
-		ambienceCmdMarkerRegexp := regexp.MustCompile("^`[(.+)]`$")
+		ambienceCmdMarkerRegexp := regexp.MustCompile("^`\\[(.+)\\]`$")
 		submatchSlice = ambienceCmdMarkerRegexp.FindStringSubmatch(scriptLine)
 		if len(submatchSlice) > 0 {
 			ambienceCmdSlice = append(ambienceCmdSlice, submatchSlice[1])
 		}
 
-		// Get player command directives
+		// Get player cmd directives
+		cmdRegexp := regexp.MustCompile("^`")
+		if !cmdRegexp.MatchString(scriptLine) {
+			narratorTextSlice = append(narratorTextSlice, scriptLine)
+		}
+
+		// Get response directives
 		playerCmdMarkerRegexp := regexp.MustCompile("^`\\((.+)\\)(?: > (.+))?`$")
 		submatchSlice = playerCmdMarkerRegexp.FindStringSubmatch(scriptLine)
 		var playerCmd string
 		if len(submatchSlice) > 0 {
 			playerCmd = submatchSlice[1]
 		}
-		if len(submatchSlice) == 1 {
+		if len(submatchSlice) == 2 {
+			var narratorResponseSlice []string
 			for _, narratorTextLine := range activeScriptSlice[lineNumber:] {
 				cmdMarkerRegexp := regexp.MustCompile("^`")
 				if cmdMarkerRegexp.MatchString(narratorTextLine) {
 					break
 				} else {
-					narratorTxtSlice = append(narratorTxtSlice, narratorTextLine)
+					narratorResponseSlice = append(narratorResponseSlice, narratorTextLine)
 				}
 			}
-			playerCmdToResponseMap[playerCmd] = map[string]string{"narratorText": narratorTxtSlice}
-		} else if len(submatchSlice) == 2 {
-			playerCmdToResponseMap[playerCmd] = map[string]string{"progress": submatchSlice[2]}
+			playerCmdToResponseMap[playerCmd] = narratorResponse{narratorTextLines: narratorResponseSlice}
+		} else if len(submatchSlice) == 3 {
+			playerCmdToResponseMap[playerCmd] = narratorResponse{progressUpdate: submatchSlice[2]}
 		}
 	}
+
 	// Execute ambience directives
-	// Get player keywords
+	// TODO: Implement
+
 	// Check if progress change
-	// Set narrator text
+	for keyword, response := range playerCmdToResponseMap {
+		if strings.ToLower(player.currentTextString) == strings.ToLower(keyword) {
+			if response.progressUpdate != "" {
+				s.progress = response.progressUpdate
+			}
+		}
+	}
+
+	narrator.setText(narratorTextSlice[0])
+	player.setText("")
 }
