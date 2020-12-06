@@ -4,6 +4,8 @@ import (
 	"image/color"
 	"time"
 
+	"golang.org/x/image/colornames"
+
 	"github.com/3ter/iMagine/internal/controltext"
 
 	"github.com/faiface/pixel/pixelgl"
@@ -38,7 +40,9 @@ type Scene struct {
 
 	face               font.Face
 	txt, title, footer *controltext.SafeText
-	typed              string
+	// hint is used to provide the player with subtle help messages on screen.
+	hint  *controltext.SafeText
+	typed string
 
 	trackMap      map[int]*effects.Volume
 	IsSceneSwitch bool
@@ -50,6 +54,16 @@ type Scene struct {
 // Script groups all info from the (markdown) script to make it available to functions within a scene
 type Script struct {
 	file string
+	// responseQueue contains the responses that still need to be delivered before player commands become active again.
+	responseQueue []narratorResponse
+}
+
+// narratorResponse groups the narrator text with it's ambience commands
+// A player cmd is mapped onto a struct containing narrator text lines, ambience directives or progress updates.
+type narratorResponse struct {
+	narratorTextLine string
+	progressUpdate   string
+	ambienceCmdSlice []string
 }
 
 // This is called once when the package is imported for the first time
@@ -102,6 +116,21 @@ func (s *Scene) updateShader(uSpeed float32, start time.Time) {
 	s.uTime = float32(time.Since(start).Seconds())
 }
 
+func (s *Scene) initHintText() {
+	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 18)
+	if err != nil {
+		panic(err)
+	}
+
+	atlas := text.NewAtlas(face, text.ASCII)
+
+	s.hint = &controltext.SafeText{
+		Text: text.New(pixel.ZV, atlas),
+	}
+	s.hint.Color = colornames.Gray
+	s.hint.WriteString("Press Enter to continue.")
+}
+
 // Init loads text and music into the Scene struct.
 func (s *Scene) Init() {
 	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
@@ -119,6 +148,7 @@ func (s *Scene) Init() {
 	s.footer = &controltext.SafeText{
 		Text: text.New(pixel.ZV, atlas),
 	}
+	s.initHintText()
 
 	s.trackMap = make(map[int]*effects.Volume)
 

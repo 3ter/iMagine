@@ -49,6 +49,8 @@ func (s *Scene) DrawBeachScene(win *pixelgl.Window) {
 	s.bgColor = getBeachBackgroundColor()
 	win.Clear(s.bgColor)
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
+	s.hint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.hint.Bounds().Center())).Moved(
+		pixel.V(0, 2*s.hint.Bounds().H())))
 
 	player.drawTextInBox(win)
 	narrator.drawTextInBox(win)
@@ -114,6 +116,17 @@ As the sunlight falls, a shiny reflection catches your eye.`
 	player.setText(playerText)
 }
 
+// getMatchedAmbienceCmd removes the command marker from a string and returns it.
+// If no match was found it returns an empty string which has length 0.
+func getMatchedAmbienceCmd(line string) string {
+	ambienceCmdMarkerRegexp := regexp.MustCompile("^`\\[(.+)\\]`$")
+	submatchSlice := ambienceCmdMarkerRegexp.FindStringSubmatch(line)
+	if len(submatchSlice) > 0 {
+		return submatchSlice[1]
+	}
+	return ""
+}
+
 func (s *Scene) enactScriptFile() {
 	var activeScript string
 
@@ -136,28 +149,26 @@ func (s *Scene) enactScriptFile() {
 
 	var ambienceCmdSlice []string
 	var narratorTextSlice []string
-
-	// A player cmd is mapped onto a struct containing narrator text lines, ambience directives or progress updates
-	type narratorResponse struct {
-		progressUpdate    string
-		narratorTextLines []string
-		ambienceCmd       string
-	}
 	var playerCmdToResponseMap = make(map[string]narratorResponse)
+
+	var narratorResponseSlice []narratorResponse
 
 	var submatchSlice []string
 	for lineNumber, scriptLine := range activeScriptSlice {
-		// Get ambience directives
-		ambienceCmdMarkerRegexp := regexp.MustCompile("^`\\[(.+)\\]`$")
-		submatchSlice = ambienceCmdMarkerRegexp.FindStringSubmatch(scriptLine)
-		if len(submatchSlice) > 0 {
-			ambienceCmdSlice = append(ambienceCmdSlice, submatchSlice[1])
+		ambienceCmd := getMatchedAmbienceCmd(scriptLine)
+		if len(ambienceCmd) > 0 {
+			ambienceCmdSlice = append(ambienceCmdSlice, ambienceCmd)
 		}
 
-		// Get player cmd directives
+		// Empty the previous ambience slice to fill the text (non-command) line with it
 		cmdRegexp := regexp.MustCompile("^`")
 		if !cmdRegexp.MatchString(scriptLine) {
-			narratorTextSlice = append(narratorTextSlice, scriptLine)
+			response := narratorResponse{
+				narratorTextLine: scriptLine,
+			}
+			response.ambienceCmdSlice = ambienceCmdSlice
+			ambienceCmdSlice = nil
+			narratorResponseSlice = append(narratorResponseSlice, response)
 		}
 
 		// Get response directives
@@ -168,6 +179,7 @@ func (s *Scene) enactScriptFile() {
 			playerCmd = submatchSlice[1]
 		}
 		if len(submatchSlice) == 2 {
+			// Only one (sub)match means no jump so push all into the queue
 			var narratorResponseSlice []string
 			for _, narratorTextLine := range activeScriptSlice[lineNumber:] {
 				cmdMarkerRegexp := regexp.MustCompile("^`")
@@ -177,11 +189,14 @@ func (s *Scene) enactScriptFile() {
 					narratorResponseSlice = append(narratorResponseSlice, narratorTextLine)
 				}
 			}
-			playerCmdToResponseMap[playerCmd] = narratorResponse{narratorTextLines: narratorResponseSlice}
+			playerCmdToResponseMap[playerCmd] = narratorResponse{narratorTextLine: err}
 		} else if len(submatchSlice) == 3 {
+			// Two (sub)matches mean no more messages to come but a jump to a new progress state
 			playerCmdToResponseMap[playerCmd] = narratorResponse{progressUpdate: submatchSlice[2]}
 		}
 	}
+
+	s.script.responseQueue = narratorResponseSlice
 
 	// Execute ambience directives
 	// TODO: Implement
