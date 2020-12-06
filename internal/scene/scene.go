@@ -160,7 +160,7 @@ func (s *Scene) Init() {
 
 	s.IsSceneSwitch = true
 
-	s.progress = "gone_west" // TODO: set back to 'beginning'
+	s.progress = "beginning"
 }
 
 // InitWithFile initializes a scene using a scene script file which then should be parsed.

@@ -1,5 +1,5 @@
 # beginning
-`[Audio: Wave sounds]`
+`[Audio: Wave.ogg]`
 
 You open your eyes.
 
@@ -15,7 +15,7 @@ You walk closer to whatever it is that caught your eye. It was glass that reflec
 `(Pick up compass) > got_compass`
 
 # got_compass
-`[Audio: Background track]`
+`[Audio: Harp.ogg]`
 
 You pick up the compass. Now you know which directions are north, east, south and west.
 

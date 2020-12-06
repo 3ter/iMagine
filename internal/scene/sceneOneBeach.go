@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/3ter/iMagine/internal/controltext"
+	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/faiface/beep/speaker"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
@@ -106,10 +108,10 @@ func getMatchedAmbienceCmd(line string) string {
 // the accumulated commands added to the narratorResponse struct.
 //
 // This could also be done with a closure but the additional parameter seemed easier.
-func getCombinedAmbienceTextResponse(line string, ambienceCmdSlice []string) narratorResponse {
+func getCombinedAmbienceTextResponse(line string, ambienceCmdSlice *[]string) narratorResponse {
 	ambienceCmd := getMatchedAmbienceCmd(line)
 	if len(ambienceCmd) > 0 {
-		ambienceCmdSlice = append(ambienceCmdSlice, ambienceCmd)
+		*ambienceCmdSlice = append(*ambienceCmdSlice, ambienceCmd)
 	}
 
 	// Empty the previous ambience slice to fill the text (non-command) line with it
@@ -118,8 +120,8 @@ func getCombinedAmbienceTextResponse(line string, ambienceCmdSlice []string) nar
 		response := narratorResponse{
 			narratorTextLine: line,
 		}
-		response.ambienceCmdSlice = ambienceCmdSlice
-		ambienceCmdSlice = nil
+		response.ambienceCmdSlice = *ambienceCmdSlice
+		*ambienceCmdSlice = nil
 		return response
 	}
 	return narratorResponse{}
@@ -177,7 +179,7 @@ func getKeywordResponseMap(line string, lineNumber int, activeScriptSlice []stri
 			continue
 		}
 
-		response := getCombinedAmbienceTextResponse(scriptLine, ambienceCmdSlice)
+		response := getCombinedAmbienceTextResponse(scriptLine, &ambienceCmdSlice)
 		if response.narratorTextLine != "" {
 			keywordResponseMap[currentKeyword] =
 				append(keywordResponseMap[currentKeyword], response)
@@ -187,11 +189,28 @@ func getKeywordResponseMap(line string, lineNumber int, activeScriptSlice []stri
 	return keywordResponseMap
 }
 
+func (s *Scene) executeAmbienceCommands() {
+	for _, ambienceCmd := range s.script.responseQueue[0].ambienceCmdSlice {
+		ambientTypeRegexp := regexp.MustCompile(`^(\w+):\s?`)
+		ambientType := ambientTypeRegexp.FindStringSubmatch(ambienceCmd)[1]
+
+		switch ambientType {
+		case `Audio`:
+			// Don't allow whitespace chars in filenames
+			audioFileRegexp := regexp.MustCompile(`^Audio:\s?(\S+)`)
+			audioFilename := audioFileRegexp.FindStringSubmatch(ambienceCmd)[1]
+			var streamer = fileio.GetStreamer("../assets/" + audioFilename)
+			speaker.Play(streamer)
+		}
+	}
+}
+
 // executeScriptFromQueue returns true if the queue is empty and all commands have been executed.
 func (s *Scene) executeScriptFromQueue() {
 
-	// Execute ambience directives
-	// TODO: Implement it
+	if len(s.script.responseQueue) > 0 {
+		s.executeAmbienceCommands()
+	}
 
 	// Set narrator text
 	if len(s.script.responseQueue) > 0 {
@@ -227,7 +246,7 @@ func (s *Scene) parseScriptFile() {
 	var ambienceCmdSlice []string
 	for lineNumber, scriptLine := range activeScriptSlice {
 
-		response := getCombinedAmbienceTextResponse(scriptLine, ambienceCmdSlice)
+		response := getCombinedAmbienceTextResponse(scriptLine, &ambienceCmdSlice)
 		if response.narratorTextLine != "" {
 			s.script.responseQueue = append(s.script.responseQueue, response)
 		}
