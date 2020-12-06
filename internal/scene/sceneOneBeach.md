@@ -36,7 +36,8 @@ You see a rocky mountain but you can’t go there yet.
 # gone_west
 You leave the sand on the ground and reach grass. A lighthouse is built here. You can see light on top. It’s not very bright. You wonder if someone lives here.
 
-`(enter lighthouse)`
+`(enter lighthouse) > lighthouse_enter`
 
 # lighthouse_enter
 You enter the lighthouse. The door was not locked. The inside looks abandoned, as if the last time a human inhibited this room was over a decade ago.
+

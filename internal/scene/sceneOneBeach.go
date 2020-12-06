@@ -28,8 +28,6 @@ func getBeachBackgroundColor() color.RGBA {
 // TypeBeachTitle prints the text to the respective text elements.
 // TODO: This should use pixelgl's typed like in the demo and do something on
 // an answer.
-// TODO: may want to add a writetotextletterbyletter in the demo scene so all features
-// are in one place.
 func (s *Scene) TypeBeachTitle() {
 
 	s.title.Clear()
@@ -80,9 +78,10 @@ func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) str
 	}
 	handleBackspace(win, &player)
 	if win.JustPressed(pixelgl.KeyEnter) {
-		// TODO: Remove old command if fully replaced
-		// s.handlePlayerCommand()
-		s.enactScriptFile()
+		if len(s.script.responseQueue) == 0 && len(s.script.keywordResponseMap) == 0 {
+			s.parseScriptFile()
+		}
+		s.executeScriptFromQueue()
 	}
 
 	if len(win.Typed()) > 0 {
@@ -90,30 +89,6 @@ func (s *Scene) HandleBeachSceneInput(win *pixelgl.Window, gameState string) str
 	}
 
 	return gameState
-}
-
-// handlePlayerCommand sets both player and narrator text to be drawn afterwards.
-func (s *Scene) handlePlayerCommand() {
-
-	var playerText string
-	var narratorText string
-
-	switch s.progress {
-	case "beginning":
-		narratorText = `You open your eyes.
-You find yourself at a beach. You hear the waves come and go, the red sunset reflects on the water's surface.
-As the sunlight falls, a shiny reflection catches your eye.`
-		if player.currentTextString == `inspect reflection` {
-			s.progress = `compass 1`
-			s.handlePlayerCommand()
-			return
-		}
-	case `compass 1`:
-		narratorText = `You walk closer to whatever it is that caught your eye. It was glass that reflected sunlight into your eyes. Glass that belonged to a little device. A compass.`
-	}
-
-	narrator.setText(narratorText)
-	player.setText(playerText)
 }
 
 // getMatchedAmbienceCmd removes the command marker from a string and returns it.
@@ -127,7 +102,31 @@ func getMatchedAmbienceCmd(line string) string {
 	return ""
 }
 
-func (s *Scene) enactScriptFile() {
+// getCombinedAmbienceTextResponse collects ambience commands in a slice until the first text line gets
+// the accumulated commands added to the narratorResponse struct.
+//
+// This could also be done with a closure but the additional parameter seemed easier.
+func getCombinedAmbienceTextResponse(line string, ambienceCmdSlice []string) narratorResponse {
+	ambienceCmd := getMatchedAmbienceCmd(line)
+	if len(ambienceCmd) > 0 {
+		ambienceCmdSlice = append(ambienceCmdSlice, ambienceCmd)
+	}
+
+	// Empty the previous ambience slice to fill the text (non-command) line with it
+	cmdRegexp := regexp.MustCompile("^`")
+	if !cmdRegexp.MatchString(line) {
+		response := narratorResponse{
+			narratorTextLine: line,
+		}
+		response.ambienceCmdSlice = ambienceCmdSlice
+		ambienceCmdSlice = nil
+		return response
+	}
+	return narratorResponse{}
+}
+
+// getActiveScriptSlice uses the already loaded script data and returns the current script based on s.progress.
+func (s *Scene) getActiveScriptSlice() []string {
 	var activeScript string
 
 	// Find currently active script part and remove progress line
@@ -147,69 +146,96 @@ func (s *Scene) enactScriptFile() {
 	activeScriptSlice := blankLineRegexp.Split(activeScript, -1)
 	activeScriptSlice = activeScriptSlice[:len(activeScriptSlice)-1] // to remove last element (empty string)
 
+	return activeScriptSlice
+}
+
+// getKeywordResponseMap gobbles up the rest of the lines from lineNumber onwards when it encounters the first
+// player command marker (parentheses).
+func getKeywordResponseMap(line string, lineNumber int, activeScriptSlice []string) map[string][]narratorResponse {
+
+	playerCmdMarkerRegexp := regexp.MustCompile("^`\\((.+)\\)(?: > (.+))?`$")
+	submatchSlice := playerCmdMarkerRegexp.FindStringSubmatch(line)
+	if len(submatchSlice) == 0 {
+		return map[string][]narratorResponse{}
+	}
+
+	var keywordResponseMap = make(map[string][]narratorResponse)
 	var ambienceCmdSlice []string
-	var narratorTextSlice []string
-	var playerCmdToResponseMap = make(map[string]narratorResponse)
 
-	var narratorResponseSlice []narratorResponse
-
-	var submatchSlice []string
-	for lineNumber, scriptLine := range activeScriptSlice {
-		ambienceCmd := getMatchedAmbienceCmd(scriptLine)
-		if len(ambienceCmd) > 0 {
-			ambienceCmdSlice = append(ambienceCmdSlice, ambienceCmd)
-		}
-
-		// Empty the previous ambience slice to fill the text (non-command) line with it
-		cmdRegexp := regexp.MustCompile("^`")
-		if !cmdRegexp.MatchString(scriptLine) {
-			response := narratorResponse{
-				narratorTextLine: scriptLine,
-			}
-			response.ambienceCmdSlice = ambienceCmdSlice
-			ambienceCmdSlice = nil
-			narratorResponseSlice = append(narratorResponseSlice, response)
-		}
-
-		// Get response directives
-		playerCmdMarkerRegexp := regexp.MustCompile("^`\\((.+)\\)(?: > (.+))?`$")
-		submatchSlice = playerCmdMarkerRegexp.FindStringSubmatch(scriptLine)
-		var playerCmd string
+	var currentKeyword string
+	for _, scriptLine := range activeScriptSlice[lineNumber:] {
+		submatchSlice := playerCmdMarkerRegexp.FindStringSubmatch(scriptLine)
 		if len(submatchSlice) > 0 {
-			playerCmd = submatchSlice[1]
+			currentKeyword = submatchSlice[1]
 		}
-		if len(submatchSlice) == 2 {
-			// Only one (sub)match means no jump so push all into the queue
-			var narratorResponseSlice []string
-			for _, narratorTextLine := range activeScriptSlice[lineNumber:] {
-				cmdMarkerRegexp := regexp.MustCompile("^`")
-				if cmdMarkerRegexp.MatchString(narratorTextLine) {
-					break
-				} else {
-					narratorResponseSlice = append(narratorResponseSlice, narratorTextLine)
-				}
-			}
-			playerCmdToResponseMap[playerCmd] = narratorResponse{narratorTextLine: err}
-		} else if len(submatchSlice) == 3 {
+		if len(submatchSlice) > 2 && submatchSlice[2] != "" {
 			// Two (sub)matches mean no more messages to come but a jump to a new progress state
-			playerCmdToResponseMap[playerCmd] = narratorResponse{progressUpdate: submatchSlice[2]}
+			keywordResponseMap[currentKeyword] =
+				append(keywordResponseMap[currentKeyword], narratorResponse{
+					progressUpdate: submatchSlice[2],
+				})
+			continue
+		}
+
+		response := getCombinedAmbienceTextResponse(scriptLine, ambienceCmdSlice)
+		if response.narratorTextLine != "" {
+			keywordResponseMap[currentKeyword] =
+				append(keywordResponseMap[currentKeyword], response)
 		}
 	}
 
-	s.script.responseQueue = narratorResponseSlice
+	return keywordResponseMap
+}
+
+// executeScriptFromQueue returns true if the queue is empty and all commands have been executed.
+func (s *Scene) executeScriptFromQueue() {
 
 	// Execute ambience directives
-	// TODO: Implement
+	// TODO: Implement it
 
-	// Check if progress change
-	for keyword, response := range playerCmdToResponseMap {
-		if strings.ToLower(player.currentTextString) == strings.ToLower(keyword) {
-			if response.progressUpdate != "" {
-				s.progress = response.progressUpdate
+	// Set narrator text
+	if len(s.script.responseQueue) > 0 {
+		narrator.setText(s.script.responseQueue[0].narratorTextLine)
+		s.script.responseQueue = s.script.responseQueue[1:]
+		return
+	}
+
+	playerProvidedKeyword := player.currentTextString
+	player.setText("")
+
+	// Check for progress change
+	for keyword, responseSlice := range s.script.keywordResponseMap {
+		if strings.ToLower(playerProvidedKeyword) == strings.ToLower(keyword) {
+			// If there's a progressUpdate then there's only one response in the slice
+			if responseSlice[0].progressUpdate != "" {
+				s.progress = responseSlice[0].progressUpdate
+				// Empty keywordResponseMap to prepare for jump to new script section.
+				s.script.keywordResponseMap = map[string][]narratorResponse{}
+				s.parseScriptFile()
+				s.executeScriptFromQueue()
+			} else {
+				narrator.setText(s.script.keywordResponseMap[keyword][0].narratorTextLine)
 			}
 		}
 	}
+}
 
-	narrator.setText(narratorTextSlice[0])
-	player.setText("")
+func (s *Scene) parseScriptFile() {
+
+	activeScriptSlice := s.getActiveScriptSlice()
+
+	var ambienceCmdSlice []string
+	for lineNumber, scriptLine := range activeScriptSlice {
+
+		response := getCombinedAmbienceTextResponse(scriptLine, ambienceCmdSlice)
+		if response.narratorTextLine != "" {
+			s.script.responseQueue = append(s.script.responseQueue, response)
+		}
+
+		keywordResponseMap := getKeywordResponseMap(scriptLine, lineNumber, activeScriptSlice)
+		if len(keywordResponseMap) > 0 {
+			s.script.keywordResponseMap = keywordResponseMap
+			break
+		}
+	}
 }

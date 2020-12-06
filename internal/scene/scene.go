@@ -56,6 +56,8 @@ type Script struct {
 	file string
 	// responseQueue contains the responses that still need to be delivered before player commands become active again.
 	responseQueue []narratorResponse
+	// keywordResponseMap contains a map from the player commands that are understood to a slice of narratorResponses.
+	keywordResponseMap map[string][]narratorResponse
 }
 
 // narratorResponse groups the narrator text with it's ambience commands
@@ -158,7 +160,7 @@ func (s *Scene) Init() {
 
 	s.IsSceneSwitch = true
 
-	s.progress = "beginning"
+	s.progress = "gone_west" // TODO: set back to 'beginning'
 }
 
 // InitWithFile initializes a scene using a scene script file which then should be parsed.
