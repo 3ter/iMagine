@@ -189,8 +189,8 @@ func getKeywordResponseMap(line string, lineNumber int, activeScriptSlice []stri
 	return keywordResponseMap
 }
 
-func (s *Scene) executeAmbienceCommands() {
-	for _, ambienceCmd := range s.script.responseQueue[0].ambienceCmdSlice {
+func executeAmbienceCommands(ambienceCmdSlice []string) {
+	for _, ambienceCmd := range ambienceCmdSlice {
 		ambientTypeRegexp := regexp.MustCompile(`^(\w+):\s?`)
 		ambientType := ambientTypeRegexp.FindStringSubmatch(ambienceCmd)[1]
 
@@ -209,7 +209,7 @@ func (s *Scene) executeAmbienceCommands() {
 func (s *Scene) executeScriptFromQueue() {
 
 	if len(s.script.responseQueue) > 0 {
-		s.executeAmbienceCommands()
+		executeAmbienceCommands(s.script.responseQueue[0].ambienceCmdSlice)
 	}
 
 	// Set narrator text
@@ -233,6 +233,7 @@ func (s *Scene) executeScriptFromQueue() {
 				s.parseScriptFile()
 				s.executeScriptFromQueue()
 			} else {
+				executeAmbienceCommands(s.script.keywordResponseMap[keyword][0].ambienceCmdSlice)
 				narrator.setText(s.script.keywordResponseMap[keyword][0].narratorTextLine)
 			}
 		}

@@ -21,6 +21,8 @@ You pick up the compass. Now you know which directions are north, east, south an
 
 `(Go south)`
 
+`[Audio: Wave.ogg]`
+
 South is nothing but the sea. You do not have a boat with you to sail away - although you really would love to….
 
 `(Go north)`
@@ -39,5 +41,5 @@ You leave the sand on the ground and reach grass. A lighthouse is built here. Yo
 `(enter lighthouse) > lighthouse_enter`
 
 # lighthouse_enter
-You enter the lighthouse. The door was not locked. The inside looks abandoned, as if the last time a human inhibited this room was over a decade ago.
+You enter the lighthouse. The door was not locked. The inside looks abandoned, as if the last time a human inhabited this room was over a decade ago.
 
