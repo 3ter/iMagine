@@ -30,7 +30,7 @@ func gameloop(win *pixelgl.Window) {
 	var forestScene = scene.ForestScene
 	demoScene.Init()
 	demoScene.InitDemoScene()
-	beachScene.InitWithFile(`../internal/scene/sceneOneBeach.md`)
+	beachScene.Init()
 	mainScene.Init()
 	forestScene.Init()
 
@@ -69,7 +69,7 @@ func gameloop(win *pixelgl.Window) {
 
 func run() {
 	cfg := pixelgl.WindowConfig{
-		Title:  "Pixel Rocks!",
+		Title:  "iMagine",
 		Bounds: pixel.R(0, 0, 1024, 768),
 	}
 	win, err := pixelgl.NewWindow(cfg)
