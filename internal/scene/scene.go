@@ -35,7 +35,8 @@ var window *pixelgl.Window
 type Scene struct {
 	bgColor         color.RGBA //= colornames.Black
 	fragmentShader  string     // =fileio.LoadFileToString("../assets/wavy_shader.glsl")
-	uTime, uSpeed   float32    // pointers to the two uniforms used by fragment shaders
+	emptyShader     string
+	uTime, uSpeed   float32 // pointers to the two uniforms used by fragment shaders
 	isShaderApplied bool
 
 	face               font.Face
@@ -113,6 +114,12 @@ func (s *Scene) applyShader(win *pixelgl.Window, start time.Time) {
 	win.Canvas().SetFragmentShader(s.fragmentShader)
 }
 
+func (s *Scene) clearShader(win *pixelgl.Window, start time.Time) {
+	win.Canvas().SetUniform("uTime", &(s.uTime))
+	win.Canvas().SetUniform("uSpeed", &(s.uSpeed))
+	win.Canvas().SetFragmentShader(s.emptyShader)
+}
+
 func (s *Scene) updateShader(uSpeed float32, start time.Time) {
 	s.uSpeed = uSpeed
 	s.uTime = float32(time.Since(start).Seconds())
@@ -155,6 +162,7 @@ func (s *Scene) Init() {
 	s.trackMap = make(map[int]*effects.Volume)
 
 	s.fragmentShader = fileio.LoadFileToString("../assets/wavy_shader.glsl")
+	s.emptyShader = fileio.LoadFileToString("../assets/empty_shader.glsl")
 	s.uSpeed = 5.0
 	s.isShaderApplied = false
 

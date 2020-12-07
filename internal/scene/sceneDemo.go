@@ -86,9 +86,16 @@ func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyS) {
-		// TODO: Make it a toggle (set a default fragment shader..?)
-		s.applyShader(win, start)
-		s.isShaderApplied = true
+
+		if s.isShaderApplied {
+			s.clearShader(win, start)
+			s.isShaderApplied = false
+		} else {
+			// TODO: Make it a toggle (set a default fragment shader..?)
+			s.applyShader(win, start)
+			s.isShaderApplied = true
+
+		}
 	}
 
 	if win.Pressed(pixelgl.KeyDown) {
