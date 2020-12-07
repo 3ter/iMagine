@@ -117,7 +117,7 @@ func (s *Scene) applyShader(win *pixelgl.Window, start time.Time) {
 func (s *Scene) clearShader(win *pixelgl.Window, start time.Time) {
 	win.Canvas().SetUniform("uTime", &(s.uTime))
 	win.Canvas().SetUniform("uSpeed", &(s.uSpeed))
-	win.Canvas().SetFragmentShader(s.emptyShader)
+	win.Canvas().SetFragmentShader(s.passthroughShader)
 }
 
 func (s *Scene) updateShader(uSpeed float32, start time.Time) {
@@ -162,7 +162,7 @@ func (s *Scene) Init() {
 	s.trackMap = make(map[int]*effects.Volume)
 
 	s.fragmentShader = fileio.LoadFileToString("../assets/wavy_shader.glsl")
-	s.emptyShader = fileio.LoadFileToString("../assets/passthrough_shader.glsl")
+	s.passthroughShader = fileio.LoadFileToString("../assets/passthrough_shader.glsl")
 	s.uSpeed = 5.0
 	s.isShaderApplied = false
 
