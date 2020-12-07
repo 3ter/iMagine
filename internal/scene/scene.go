@@ -33,11 +33,11 @@ var window *pixelgl.Window
 
 // Scene contains basic settings and assets (font, music, shaders, content)
 type Scene struct {
-	bgColor         color.RGBA //= colornames.Black
-	fragmentShader  string     // =fileio.LoadFileToString("../assets/wavy_shader.glsl")
-	emptyShader     string
-	uTime, uSpeed   float32 // pointers to the two uniforms used by fragment shaders
-	isShaderApplied bool
+	bgColor           color.RGBA //= colornames.Black
+	fragmentShader    string     // =fileio.LoadFileToString("../assets/wavy_shader.glsl")
+	passthroughShader string
+	uTime, uSpeed     float32 // pointers to the two uniforms used by fragment shaders
+	isShaderApplied   bool
 
 	face               font.Face
 	txt, title, footer *controltext.SafeText
@@ -162,7 +162,7 @@ func (s *Scene) Init() {
 	s.trackMap = make(map[int]*effects.Volume)
 
 	s.fragmentShader = fileio.LoadFileToString("../assets/wavy_shader.glsl")
-	s.emptyShader = fileio.LoadFileToString("../assets/empty_shader.glsl")
+	s.emptyShader = fileio.LoadFileToString("../assets/passthrough_shader.glsl")
 	s.uSpeed = 5.0
 	s.isShaderApplied = false
 
