@@ -91,7 +91,6 @@ func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
 			s.clearShader(win, start)
 			s.isShaderApplied = false
 		} else {
-			// TODO: Make it a toggle (set a default fragment shader..?)
 			s.applyShader(win, start)
 			s.isShaderApplied = true
 

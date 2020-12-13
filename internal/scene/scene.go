@@ -162,6 +162,7 @@ func (s *Scene) Init() {
 	s.trackMap = make(map[int]*effects.Volume)
 
 	s.fragmentShader = fileio.LoadFileToString("../assets/wavy_shader.glsl")
+	//TODO: this shader does not do a true passthrough yet and only converts to grayscale
 	s.passthroughShader = fileio.LoadFileToString("../assets/passthrough_shader.glsl")
 	s.uSpeed = 5.0
 	s.isShaderApplied = false
