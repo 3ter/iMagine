@@ -33,10 +33,11 @@ var window *pixelgl.Window
 
 // Scene contains basic settings and assets (font, music, shaders, content)
 type Scene struct {
-	bgColor         color.RGBA //= colornames.Black
-	fragmentShader  string     // =fileio.LoadFileToString("../assets/wavy_shader.glsl")
-	uTime, uSpeed   float32    // pointers to the two uniforms used by fragment shaders
-	isShaderApplied bool
+	bgColor           color.RGBA //= colornames.Black
+	fragmentShader    string     // =fileio.LoadFileToString("../assets/wavy_shader.glsl")
+	passthroughShader string
+	uTime, uSpeed     float32 // pointers to the two uniforms used by fragment shaders
+	isShaderApplied   bool
 
 	face               font.Face
 	txt, title, footer *controltext.SafeText
@@ -113,6 +114,12 @@ func (s *Scene) applyShader(win *pixelgl.Window, start time.Time) {
 	win.Canvas().SetFragmentShader(s.fragmentShader)
 }
 
+func (s *Scene) clearShader(win *pixelgl.Window, start time.Time) {
+	win.Canvas().SetUniform("uTime", &(s.uTime))
+	win.Canvas().SetUniform("uSpeed", &(s.uSpeed))
+	win.Canvas().SetFragmentShader(s.passthroughShader)
+}
+
 func (s *Scene) updateShader(uSpeed float32, start time.Time) {
 	s.uSpeed = uSpeed
 	s.uTime = float32(time.Since(start).Seconds())
@@ -155,6 +162,8 @@ func (s *Scene) Init() {
 	s.trackMap = make(map[int]*effects.Volume)
 
 	s.fragmentShader = fileio.LoadFileToString("../assets/wavy_shader.glsl")
+	//TODO: this shader does not do a true passthrough yet and only converts to grayscale
+	s.passthroughShader = fileio.LoadFileToString("../assets/passthrough_shader.glsl")
 	s.uSpeed = 5.0
 	s.isShaderApplied = false
 
