@@ -3,9 +3,9 @@
 
 You open your eyes.
 
-You find yourself at a beach. You hear the waves come and go, the red sunset reflects on the water’s surface.
+You find yourself at a beach. You hear the waves come and go, the <span style="color:red">red</span> sunset reflects on the water’s surface.
 
-As the sunlight falls, a shiny reflection catches your eye.
+As the sunlight falls, a shiny <span style="color:purple; font-weight:bold">reflection</span> catches your eye.
 
 `(Inspect reflection) > get_compass`
 

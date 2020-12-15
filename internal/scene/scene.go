@@ -39,7 +39,8 @@ type Scene struct {
 	uTime, uSpeed     float32 // pointers to the two uniforms used by fragment shaders
 	isShaderApplied   bool
 
-	face               font.Face
+	face font.Face
+	// TODO: These should probably go or be used for real.
 	txt, title, footer *controltext.SafeText
 	// hint is used to provide the player with subtle help messages on screen.
 	hint  *controltext.SafeText
