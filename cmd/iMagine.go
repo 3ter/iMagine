@@ -45,8 +45,8 @@ func gameloop(win *pixelgl.Window) {
 			gameState = mainScene.HandleMainMenuAndReturnState(win)
 
 		case "Start":
-			gameState = beachScene.HandleBeachSceneInput(win, gameState)
-			beachScene.DrawBeachScene(win)
+			gameState = beachScene.OnUpdate(win, gameState)
+			beachScene.Draw(win)
 
 		case "Forest":
 			prevGameState = gameState

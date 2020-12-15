@@ -177,3 +177,54 @@ func (s *Scene) InitWithFile(scriptFilepath string) {
 	s.Init()
 	s.script.file = fileio.LoadFileToString(scriptFilepath)
 }
+
+// handleBackspace is necessary to implement manually as we currently "misuse" the text library in having one text
+// object holding all our text so it is currently replaced entirely though only one character should vanish.
+func handleBackspace(win *pixelgl.Window, player *Player) {
+	if win.JustPressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
+		player.setText(player.currentTextString[:len(player.currentTextString)-1])
+		backspaceCounter = int(-120 * 0.5) // Framerate times seconds to wait until continuous backspace kicks in.
+	} else if win.Pressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
+		backspaceCounter++
+		backspaceDeletionSpeed := int(120 / 40) // Framerate divided by deletions per second.
+		if backspaceCounter > 0 && backspaceCounter%backspaceDeletionSpeed == 0 {
+			player.setText(player.currentTextString[:len(player.currentTextString)-1])
+			backspaceCounter = 0
+		}
+	}
+}
+
+// OnUpdate listens and processes player input on every frame update.
+func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
+	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
+		win.SetClosed(true)
+	}
+	if win.JustPressed(pixelgl.KeyEscape) {
+		gameState = "mainMenu"
+	}
+	handleBackspace(win, &player)
+	if win.JustPressed(pixelgl.KeyEnter) {
+		if len(s.script.responseQueue) == 0 && len(s.script.keywordResponseMap) == 0 {
+			s.parseScriptFile()
+		}
+		s.executeScriptFromQueue()
+	}
+
+	if len(win.Typed()) > 0 {
+		player.addText(win.Typed())
+	}
+
+	return gameState
+}
+
+// Draw draws background and text to the window.
+func (s *Scene) Draw(win *pixelgl.Window) {
+	s.bgColor = getBeachBackgroundColor()
+	win.Clear(s.bgColor)
+	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
+	s.hint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.hint.Bounds().Center())).Moved(
+		pixel.V(0, 2*s.hint.Bounds().H())))
+
+	player.drawTextInBox(win)
+	narrator.drawTextInBox(win)
+}
