@@ -17,18 +17,30 @@ import (
 // Texter is defined by its text
 type Texter struct {
 	fontFace font.Face
-	// The color in this object is settable, for changing the font a new object
-	// is needed.
-	currentTextObject *text.Text
+	// currentTextObjects contain text objects that define one letter of the current line of the Texter.
+	// In the text library the color can be set via its attribute but for changing the font a new object is needed.
+	currentTextObjects []*text.Text
+	// currentTextString contains a string stripped from any markup symbols.
 	currentTextString string
 
 	textBox *TextBox
 }
 
-func (t *Texter) setTextFontFace(face font.Face) {
-	t.currentTextObject = text.New(t.currentTextObject.Orig, text.NewAtlas(face, text.ASCII))
-	// The newly created *text.Text doesn't contain any glyphs to draw yet
-	t.currentTextObject.WriteString(t.currentTextString)
+// setTextRangeFontFace sets the font face for every letter in the range specified by two indices.
+// Indices start from 0 and the ending index is not included so that their difference gives the number of letters
+// changed (not modified, as they are new objects).
+func (t *Texter) setTextRangeFontFace(face font.Face, indexStart, indexEnd int) {
+	for idx, textObj := range t.currentTextObjects {
+		if idx < indexStart {
+			continue
+		} else if idx >= indexEnd {
+			break
+		}
+		t.currentTextObjects[idx] = text.New(t.currentTextObjects[idx].Orig, text.NewAtlas(face, text.ASCII))
+		// The newly created *text.Text doesn't contain any glyphs to draw yet
+		currLetter := string(t.currentTextString[idx])
+		t.currentTextObjects[idx].WriteString(currLetter)
+	}
 }
 
 func (t *Texter) setTextColor(col color.Color) {
