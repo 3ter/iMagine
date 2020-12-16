@@ -5,6 +5,7 @@ package scene
 import (
 	"image/color"
 	"regexp"
+	"strings"
 
 	"golang.org/x/image/colornames"
 
@@ -58,7 +59,6 @@ func (t *Texter) setTextRangeColor(col color.Color, indexStart, indexEnd int) {
 	}
 }
 
-// TODO: Add "isValidMarkdownCommand" to make errors in md file transparent to the user
 type markdownCommand struct {
 	idxStart          int
 	idxEnd            int
@@ -70,7 +70,7 @@ func getMarkdownCommandSliceFromString(str string) ([]markdownCommand, string) {
 	var markdownCommandSlice []markdownCommand
 	var strippedStr string
 
-	htmlOpenRegexp := regexp.MustCompile(`\<[^\/]\w+ style="(?:(\w+)\s*:\s*(\w+))+"\>`)
+	htmlOpenRegexp := regexp.MustCompile(`\<[^\/]\w+ style="(?:(\w+)\s*:\s*([^"; ]+))+"\>`)
 	htmlCloseRegexp := regexp.MustCompile(`\<\/\w+\s?\>`)
 	htmlRegexp := regexp.MustCompile(`\<.+?\>`)
 
@@ -90,9 +90,9 @@ func getMarkdownCommandSliceFromString(str string) ([]markdownCommand, string) {
 	for i := 0; i < len(styleIndexStartSlice); i++ {
 		currMarkdownCommand.attributeValueMap = make(map[string]string)
 		currMarkdownCommand.attributeValueMap[styleMatchSlice[i][1]] = styleMatchSlice[i][2]
-		currMarkdownCommand.idxStart = styleIndexStartSlice[i][0] - cumulativeOffset + 1
+		currMarkdownCommand.idxStart = styleIndexStartSlice[i][0] - cumulativeOffset
 		cumulativeOffset += styleIndexStartSlice[i][1] - styleIndexStartSlice[i][0]
-		currMarkdownCommand.idxEnd = styleIndexEndSlice[i][0] - cumulativeOffset + 1
+		currMarkdownCommand.idxEnd = styleIndexEndSlice[i][0] - cumulativeOffset
 		cumulativeOffset += styleIndexEndSlice[i][1] - styleIndexEndSlice[i][0]
 		markdownCommandSlice = append(markdownCommandSlice, currMarkdownCommand)
 	}
@@ -121,10 +121,11 @@ func (t *Texter) convertStringToTextObjectsInBox(str string, scn *Scene) {
 	markdownCommandSlice, str := getMarkdownCommandSliceFromString(str)
 
 	t.currentTextObjects = nil
-	leftIndent := t.textBox.dimensions.X + t.textBox.margin
+	leftIndent := t.textBox.topLeftCorner.X + t.textBox.margin
 
 	// starting point for writing characters
-	currentOrig := pixel.V(leftIndent, t.textBox.topLeftCorner.Y+t.textBox.margin)
+	// TODO: Add debug mode, where you can see the coordinates of the mouse... pixel coordinates...
+	currentOrig := pixel.V(leftIndent, t.textBox.topLeftCorner.Y-2*t.textBox.margin)
 	currentAtlas := scn.atlas
 	// TODO: Add scn.textColor to the scene struct.
 	// This has to be in sync with the background, also defined by the scene
@@ -132,27 +133,24 @@ func (t *Texter) convertStringToTextObjectsInBox(str string, scn *Scene) {
 
 	for idx, rune := range str {
 
-		if idx >= markdownCommandSlice[0].idxStart && idx < markdownCommandSlice[0].idxEnd {
-			// for _, currMarkdownCommand := range markdownCommandSlice[0].attributeValueMap {
-
-			// }
-		} else {
+		if len(markdownCommandSlice) == 0 {
+		} else if idx == markdownCommandSlice[0].idxStart {
+			for attribute, value := range markdownCommandSlice[0].attributeValueMap {
+				switch attribute {
+				case `color`:
+					currentColor = colornames.Map[strings.ToLower(value)]
+				case `font-size`:
+					// TODO: implement font size change via atlas
+				}
+			}
+		} else if idx == markdownCommandSlice[0].idxEnd {
 			markdownCommandSlice = markdownCommandSlice[1:]
 			currentAtlas = scn.atlas
 			currentColor = colornames.Black
 		}
 
 		char := string(rune)
-		switch char {
-		// case `<`:
-		// 	if len(currentMarkdownCommandsMap) == 0 {
-		// 		// TODO: Modify atlas according to command instead of using the default one
-		// 		// TODO: Modify color according to command instead of using the default one
-		// 	} else {
-		// 		currentMarkdownCommandsMap = nil
-		// 	}
-		// case `>`:
-		case `\n`:
+		if char == `\n` {
 			// align at left indent and remove one line height to the current Y Position
 			currentOrig = currentOrig.Add(pixel.V(leftIndent-currentOrig.X, -t.currentTextObjects[idx].LineHeight))
 		}
@@ -161,10 +159,11 @@ func (t *Texter) convertStringToTextObjectsInBox(str string, scn *Scene) {
 		t.currentTextObjects = append(t.currentTextObjects, newTextObject)
 		newTextObject.Color = currentColor
 
-		currentOrig = pixel.V(newTextObject.BoundsOf(char).W(), 0)
-
 		newTextObject.WriteString(char)
+		currentOrig = newTextObject.Dot
 	}
+
+	return
 }
 
 // setText accepts a string with potential markdown formatting containing HTML with inline CSS for text formatting.
@@ -198,6 +197,6 @@ func (t *Texter) drawTextInBox(win *pixelgl.Window) {
 	// marginVec := pixel.V(t.textBox.margin, t.textBox.margin-t.textBox.thickness-2.4*t.currentTextObject.LineHeight)
 	// t.currentTextObject.Draw(win, pixel.IM.Moved(t.textBox.topLeftCorner.Add(marginVec)))
 	for _, textObj := range t.currentTextObjects {
-		textObj.Draw(win, pixel.IM.Moved(textObj.Orig))
+		textObj.Draw(win, pixel.IM)
 	}
 }
