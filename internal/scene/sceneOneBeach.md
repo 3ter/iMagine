@@ -1,7 +1,7 @@
 # beginning
 `[Audio: Wave.ogg]`
 
-You open your eyes.
+You open your <span style="color:green">eyes</span>.
 
 You find yourself at a beach. You hear the waves come and go, the <span style="color:red">red</span> sunset reflects on the water’s surface.
 

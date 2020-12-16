@@ -4,6 +4,7 @@ package scene
 
 import (
 	"image/color"
+	"regexp"
 
 	"golang.org/x/image/colornames"
 
@@ -39,10 +40,10 @@ func (t *Texter) setTextRangeFontFace(face font.Face, indexStart, indexEnd int) 
 		} else if idx >= indexEnd {
 			break
 		}
-		t.currentTextObjects[idx] = text.New(t.currentTextObjects[idx].Orig, text.NewAtlas(face, text.ASCII))
+		textObj = text.New(textObj.Orig, text.NewAtlas(face, text.ASCII))
 		// The newly created *text.Text doesn't contain any glyphs to draw yet
 		currLetter := string(t.currentTextString[idx])
-		t.currentTextObjects[idx].WriteString(currLetter)
+		textObj.WriteString(currLetter)
 	}
 }
 
@@ -53,8 +54,50 @@ func (t *Texter) setTextRangeColor(col color.Color, indexStart, indexEnd int) {
 		} else if idx >= indexEnd {
 			break
 		}
-		t.currentTextObjects[idx].Color = col
+		textObj.Color = col
 	}
+}
+
+// TODO: Add "isValidMarkdownCommand" to make errors in md file transparent to the user
+type markdownCommand struct {
+	idxStart          int
+	idxEnd            int
+	attributeValueMap map[string]string
+}
+
+func getMarkdownCommandSliceFromString(str string) ([]markdownCommand, string) {
+
+	var markdownCommandSlice []markdownCommand
+	var strippedStr string
+
+	htmlOpenRegexp := regexp.MustCompile(`\<[^\/]\w+ style="(?:(\w+)\s*:\s*(\w+))+"\>`)
+	htmlCloseRegexp := regexp.MustCompile(`\<\/\w+\s?\>`)
+	htmlRegexp := regexp.MustCompile(`\<.+?\>`)
+
+	styleMatchSlice := htmlOpenRegexp.FindAllStringSubmatch(str, -1)
+	styleIndexStartSlice := htmlOpenRegexp.FindAllStringIndex(str, -1)
+	styleIndexEndSlice := htmlCloseRegexp.FindAllStringIndex(str, -1)
+
+	// I don't do error checking here (e.g. same number of opening/closing brackets) because it is expected to be seen
+	// in the markdown preview in an editor.
+
+	strippedStr = htmlRegexp.ReplaceAllString(str, "")
+
+	// for adjusting indices after the replacement
+	cumulativeOffset := 0
+
+	var currMarkdownCommand markdownCommand
+	for i := 0; i < len(styleIndexStartSlice); i++ {
+		currMarkdownCommand.attributeValueMap = make(map[string]string)
+		currMarkdownCommand.attributeValueMap[styleMatchSlice[i][1]] = styleMatchSlice[i][2]
+		currMarkdownCommand.idxStart = styleIndexStartSlice[i][0] - cumulativeOffset + 1
+		cumulativeOffset += styleIndexStartSlice[i][1] - styleIndexStartSlice[i][0]
+		currMarkdownCommand.idxEnd = styleIndexEndSlice[i][0] - cumulativeOffset + 1
+		cumulativeOffset += styleIndexEndSlice[i][1] - styleIndexEndSlice[i][0]
+		markdownCommandSlice = append(markdownCommandSlice, currMarkdownCommand)
+	}
+
+	return markdownCommandSlice, strippedStr
 }
 
 // TODO: This already needs to know for which ranges what formatting should be used.
@@ -67,7 +110,6 @@ func (t *Texter) setTextRangeColor(col color.Color, indexStart, indexEnd int) {
 
 // case '<' html command, read it in until '>'
 
-// If it reads another '<',... it should ... ooh,... nesting is awful.. let's leave that for the moment, can we?
 // TODO: Add nesting (up until then no nested html)
 
 // execute it e.g. get the atlas or change the color
@@ -76,36 +118,52 @@ func (t *Texter) setTextRangeColor(col color.Color, indexStart, indexEnd int) {
 // Write letters into text object ...
 func (t *Texter) convertStringToTextObjectsInBox(str string, scn *Scene) {
 
+	markdownCommandSlice, str := getMarkdownCommandSliceFromString(str)
+
 	t.currentTextObjects = nil
 	leftIndent := t.textBox.dimensions.X + t.textBox.margin
 
 	// starting point for writing characters
 	currentOrig := pixel.V(leftIndent, t.textBox.topLeftCorner.Y+t.textBox.margin)
-
-	var currentWord string
-	currentMarkdownCommandsMap := make(map[string]string)
+	currentAtlas := scn.atlas
+	// TODO: Add scn.textColor to the scene struct.
+	// This has to be in sync with the background, also defined by the scene
+	currentColor := colornames.Black
 
 	for idx, rune := range str {
 
+		if idx >= markdownCommandSlice[0].idxStart && idx < markdownCommandSlice[0].idxEnd {
+			// for _, currMarkdownCommand := range markdownCommandSlice[0].attributeValueMap {
+
+			// }
+		} else {
+			markdownCommandSlice = markdownCommandSlice[1:]
+			currentAtlas = scn.atlas
+			currentColor = colornames.Black
+		}
+
 		char := string(rune)
 		switch char {
-		case `<`:
-			if currentMarkdownCommandsMap == nil {
-				// TODO: Modify atlas according to command instead of using the default one
-				atlas := scn.atlas
-				// TODO: Modify color according to command instead of using the default one
-				color := colornames.White
-				t.currentTextObjects[idx] = text.New(currentOrig, atlas)
-				currentOrig = pixel.V(t.currentTextObjects[idx].BoundsOf(currentWord).W(), 0)
-
-				t.currentTextObjects[idx].WriteString(currentWord)
-			}
-
-		case `>`:
+		// case `<`:
+		// 	if len(currentMarkdownCommandsMap) == 0 {
+		// 		// TODO: Modify atlas according to command instead of using the default one
+		// 		// TODO: Modify color according to command instead of using the default one
+		// 	} else {
+		// 		currentMarkdownCommandsMap = nil
+		// 	}
+		// case `>`:
 		case `\n`:
 			// align at left indent and remove one line height to the current Y Position
 			currentOrig = currentOrig.Add(pixel.V(leftIndent-currentOrig.X, -t.currentTextObjects[idx].LineHeight))
 		}
+
+		newTextObject := text.New(currentOrig, currentAtlas)
+		t.currentTextObjects = append(t.currentTextObjects, newTextObject)
+		newTextObject.Color = currentColor
+
+		currentOrig = pixel.V(newTextObject.BoundsOf(char).W(), 0)
+
+		newTextObject.WriteString(char)
 	}
 }
 
