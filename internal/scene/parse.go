@@ -131,13 +131,13 @@ func (s *Scene) executeScriptFromQueue() {
 
 	// Set narrator text
 	if len(s.script.responseQueue) > 0 {
-		narrator.setText(s.script.responseQueue[0].narratorTextLine)
+		narrator.setText(s.script.responseQueue[0].narratorTextLine, s)
 		s.script.responseQueue = s.script.responseQueue[1:]
 		return
 	}
 
 	playerProvidedKeyword := player.currentTextString
-	player.setText("")
+	player.setText("", s)
 
 	// Check for progress change
 	for keyword, responseSlice := range s.script.keywordResponseMap {
@@ -151,7 +151,7 @@ func (s *Scene) executeScriptFromQueue() {
 				s.executeScriptFromQueue()
 			} else {
 				executeAmbienceCommands(s.script.keywordResponseMap[keyword][0].ambienceCmdSlice)
-				narrator.setText(s.script.keywordResponseMap[keyword][0].narratorTextLine)
+				narrator.setText(s.script.keywordResponseMap[keyword][0].narratorTextLine, s)
 			}
 		}
 	}

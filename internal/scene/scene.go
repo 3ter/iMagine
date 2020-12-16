@@ -39,9 +39,12 @@ type Scene struct {
 	uTime, uSpeed     float32 // pointers to the two uniforms used by fragment shaders
 	isShaderApplied   bool
 
-	face font.Face
+	face  *font.Face
+	atlas *text.Atlas
+
 	// TODO: These should probably go or be used for real.
 	txt, title, footer *controltext.SafeText
+
 	// hint is used to provide the player with subtle help messages on screen.
 	hint  *controltext.SafeText
 	typed string
@@ -148,15 +151,15 @@ func (s *Scene) Init() {
 		panic(err)
 	}
 
-	atlas := text.NewAtlas(face, text.ASCII)
+	s.atlas = text.NewAtlas(face, text.ASCII)
 	s.txt = &controltext.SafeText{
-		Text: text.New(pixel.ZV, atlas),
+		Text: text.New(pixel.ZV, s.atlas),
 	}
 	s.title = &controltext.SafeText{
-		Text: text.New(pixel.ZV, atlas),
+		Text: text.New(pixel.ZV, s.atlas),
 	}
 	s.footer = &controltext.SafeText{
-		Text: text.New(pixel.ZV, atlas),
+		Text: text.New(pixel.ZV, s.atlas),
 	}
 	s.initHintText()
 
@@ -179,20 +182,21 @@ func (s *Scene) InitWithFile(scriptFilepath string) {
 	s.script.file = fileio.LoadFileToString(scriptFilepath)
 }
 
+// TODO: redo backspace using the 'Repeating' event (see faiface/pixel Wiki for writing texts)
 // handleBackspace is necessary to implement manually as we currently "misuse" the text library in having one text
 // object holding all our text so it is currently replaced entirely though only one character should vanish.
 func handleBackspace(win *pixelgl.Window, player *Player) {
-	if win.JustPressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
-		player.setText(player.currentTextString[:len(player.currentTextString)-1])
-		backspaceCounter = int(-120 * 0.5) // Framerate times seconds to wait until continuous backspace kicks in.
-	} else if win.Pressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
-		backspaceCounter++
-		backspaceDeletionSpeed := int(120 / 40) // Framerate divided by deletions per second.
-		if backspaceCounter > 0 && backspaceCounter%backspaceDeletionSpeed == 0 {
-			player.setText(player.currentTextString[:len(player.currentTextString)-1])
-			backspaceCounter = 0
-		}
-	}
+	// if win.JustPressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
+	// 	player.setText(player.currentTextString[:len(player.currentTextString)-1])
+	// 	backspaceCounter = int(-120 * 0.5) // Framerate times seconds to wait until continuous backspace kicks in.
+	// } else if win.Pressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
+	// 	backspaceCounter++
+	// 	backspaceDeletionSpeed := int(120 / 40) // Framerate divided by deletions per second.
+	// 	if backspaceCounter > 0 && backspaceCounter%backspaceDeletionSpeed == 0 {
+	// 		player.setText(player.currentTextString[:len(player.currentTextString)-1])
+	// 		backspaceCounter = 0
+	// 	}
+	// }
 }
 
 // OnUpdate listens and processes player input on every frame update.

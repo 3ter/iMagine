@@ -4,7 +4,8 @@ package scene
 
 import (
 	"image/color"
-	"regexp"
+
+	"golang.org/x/image/colornames"
 
 	"github.com/faiface/pixel/pixelgl"
 
@@ -17,9 +18,11 @@ import (
 // Texter is defined by its text
 type Texter struct {
 	fontFace font.Face
+
 	// currentTextObjects contain text objects that define one letter of the current line of the Texter.
 	// In the text library the color can be set via its attribute but for changing the font a new object is needed.
 	currentTextObjects []*text.Text
+
 	// currentTextString contains a string stripped from any markup symbols.
 	currentTextString string
 
@@ -27,8 +30,8 @@ type Texter struct {
 }
 
 // setTextRangeFontFace sets the font face for every letter in the range specified by two indices.
-// Indices start from 0 and the ending index is not included so that their difference gives the number of letters
-// changed (not modified, as they are new objects).
+//
+// To change the whole string you can use 0 and len(str) as indices.
 func (t *Texter) setTextRangeFontFace(face font.Face, indexStart, indexEnd int) {
 	for idx, textObj := range t.currentTextObjects {
 		if idx < indexStart {
@@ -43,64 +46,100 @@ func (t *Texter) setTextRangeFontFace(face font.Face, indexStart, indexEnd int) 
 	}
 }
 
-func (t *Texter) setTextColor(col color.Color) {
-	t.currentTextObject.Color = col
-}
-
-func (t *Texter) getWrappedString(str string) string {
-	maxTextWidth := t.textBox.dimensions.X - t.textBox.margin - 20
-
-	m := regexp.MustCompile(`\n`) // GoogleDocs uses LF to mark its line endings
-	currLinesSlice := m.Split(str, -1)
-	var wrappedString string
-	for idx, currLine := range currLinesSlice {
-		if t.currentTextObject.BoundsOf(str).W() <= maxTextWidth {
-			wrappedString = str
+func (t *Texter) setTextRangeColor(col color.Color, indexStart, indexEnd int) {
+	for idx, textObj := range t.currentTextObjects {
+		if idx < indexStart {
+			continue
+		} else if idx >= indexEnd {
 			break
 		}
-		if t.currentTextObject.BoundsOf(currLine).W() <= maxTextWidth {
-			if idx < len(currLinesSlice)-1 {
-				wrappedString += currLine + "\n"
-			} else {
-				wrappedString += currLine
-			}
-			continue
-		}
-		newLineBreakIndex := int((maxTextWidth) * (float64(len(currLine))) / t.currentTextObject.BoundsOf(currLine).W())
-		lastSpaceMatch := regexp.MustCompile(` [^ ]*?$`)
-		if lastSpaceMatch.FindStringIndex(currLine[:newLineBreakIndex]) != nil {
-			newLineBreakIndex = lastSpaceMatch.FindStringIndex(currLine[:newLineBreakIndex])[0]
-		}
-		if idx < len(currLinesSlice)-1 {
-			wrappedString += currLine[:newLineBreakIndex] + "\n" + currLine[newLineBreakIndex+1:] + " "
-		} else {
-			wrappedString += currLine[:newLineBreakIndex] + "\n" + currLine[newLineBreakIndex+1:]
-		}
+		t.currentTextObjects[idx].Color = col
 	}
-
-	return wrappedString
 }
 
-func (t *Texter) setText(str string) {
-	wrappedString := t.getWrappedString(str)
+// TODO: This already needs to know for which ranges what formatting should be used.
+// So this string still has it all, all the md!
 
-	t.currentTextString = wrappedString
-	t.currentTextObject.Clear()
-	t.currentTextObject.WriteString(wrappedString)
+// case read until '<'
+// use default atlas and color and write to text object (could be too long for the box though...)
+// This needs to be checked right here! Otherwise the following letters could be disturbed
+// So right here there needs to be checked, is it too long or not!
+
+// case '<' html command, read it in until '>'
+
+// If it reads another '<',... it should ... ooh,... nesting is awful.. let's leave that for the moment, can we?
+// TODO: Add nesting (up until then no nested html)
+
+// execute it e.g. get the atlas or change the color
+// Read in the rest of the text until '<'
+// Check if this is correct closing token '</span>'
+// Write letters into text object ...
+func (t *Texter) convertStringToTextObjectsInBox(str string, scn *Scene) {
+
+	t.currentTextObjects = nil
+	leftIndent := t.textBox.dimensions.X + t.textBox.margin
+
+	// starting point for writing characters
+	currentOrig := pixel.V(leftIndent, t.textBox.topLeftCorner.Y+t.textBox.margin)
+
+	var currentWord string
+	currentMarkdownCommandsMap := make(map[string]string)
+
+	for idx, rune := range str {
+
+		char := string(rune)
+		switch char {
+		case `<`:
+			if currentMarkdownCommandsMap == nil {
+				// TODO: Modify atlas according to command instead of using the default one
+				atlas := scn.atlas
+				// TODO: Modify color according to command instead of using the default one
+				color := colornames.White
+				t.currentTextObjects[idx] = text.New(currentOrig, atlas)
+				currentOrig = pixel.V(t.currentTextObjects[idx].BoundsOf(currentWord).W(), 0)
+
+				t.currentTextObjects[idx].WriteString(currentWord)
+			}
+
+		case `>`:
+		case `\n`:
+			// align at left indent and remove one line height to the current Y Position
+			currentOrig = currentOrig.Add(pixel.V(leftIndent-currentOrig.X, -t.currentTextObjects[idx].LineHeight))
+		}
+	}
+}
+
+// setText accepts a string with potential markdown formatting containing HTML with inline CSS for text formatting.
+// e.g. roses are <span style="color:red">red</span>
+// Online LF "\n" is used to mark a new line.
+func (t *Texter) setText(str string, scn *Scene) {
+
+	t.convertStringToTextObjectsInBox(str, scn)
+	// TODO: repopulate
+	// wrappedString := t.getWrappedString(str)
+
+	// t.currentTextString = wrappedString
+	// t.currentTextObject.Clear()
+	// t.currentTextObject.WriteString(wrappedString)
 }
 
 func (t *Texter) addText(str string) {
-	wrappedString := t.getWrappedString(t.currentTextString + str)
+	// TODO: repopulate
+	// wrappedString := t.getWrappedString(t.currentTextString + str)
 
-	t.currentTextString = wrappedString
-	t.currentTextObject.Clear()
-	t.currentTextObject.WriteString(wrappedString)
+	// t.currentTextString = wrappedString
+	// t.currentTextObject.Clear()
+	// t.currentTextObject.WriteString(wrappedString)
 }
 
 func (t *Texter) drawTextInBox(win *pixelgl.Window) {
 	t.textBox.drawTextBox(win)
 
 	// TODO: The y coordinate is guesswork and probably dependend on the font face used!
-	marginVec := pixel.V(t.textBox.margin, t.textBox.margin-t.textBox.thickness-2.4*t.currentTextObject.LineHeight)
-	t.currentTextObject.Draw(win, pixel.IM.Moved(t.textBox.topLeftCorner.Add(marginVec)))
+	// TODO: This can be either done in convertStringToTextObjectsInBox or here. One should go.
+	// marginVec := pixel.V(t.textBox.margin, t.textBox.margin-t.textBox.thickness-2.4*t.currentTextObject.LineHeight)
+	// t.currentTextObject.Draw(win, pixel.IM.Moved(t.textBox.topLeftCorner.Add(marginVec)))
+	for _, textObj := range t.currentTextObjects {
+		textObj.Draw(win, pixel.IM.Moved(textObj.Orig))
+	}
 }
