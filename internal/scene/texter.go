@@ -122,6 +122,8 @@ func (t *Texter) convertStringToTextObjectsInBox(str string, scn *Scene) {
 
 	t.currentTextObjects = nil
 	leftIndent := t.textBox.topLeftCorner.X + t.textBox.margin
+	nextWordRegexp := regexp.MustCompile(`^[^\s]+ `)
+	var nextWord string
 
 	// starting point for writing characters
 	// TODO: Add debug mode, where you can see the coordinates of the mouse... pixel coordinates...
@@ -150,9 +152,12 @@ func (t *Texter) convertStringToTextObjectsInBox(str string, scn *Scene) {
 		}
 
 		char := string(rune)
-		if char == `\n` {
+		switch char {
+		case `\n`:
 			// align at left indent and remove one line height to the current Y Position
 			currentOrig = currentOrig.Add(pixel.V(leftIndent-currentOrig.X, -t.currentTextObjects[idx].LineHeight))
+		case ` `:
+			nextWord = nextWordRegexp.FindString(str[(idx + 1):])
 		}
 
 		newTextObject := text.New(currentOrig, currentAtlas)
@@ -161,6 +166,11 @@ func (t *Texter) convertStringToTextObjectsInBox(str string, scn *Scene) {
 
 		newTextObject.WriteString(char)
 		currentOrig = newTextObject.Dot
+
+		if newTextObject.BoundsOf(` `+nextWord).Max.X >
+			(t.textBox.topLeftCorner.X + t.textBox.dimensions.X - 2*t.textBox.margin) {
+			currentOrig = currentOrig.Add(pixel.V(leftIndent-currentOrig.X, -t.currentTextObjects[idx].LineHeight))
+		}
 	}
 
 	return
