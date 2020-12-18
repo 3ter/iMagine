@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/3ter/iMagine/internal/fileio"
 	"github.com/faiface/pixel/pixelgl"
 
 	"github.com/faiface/pixel"
@@ -154,7 +155,11 @@ func (t *Texter) applyMarkdownCommand(markdownCommandSlice []markdownCommand, id
 			case `color`:
 				t.color = colornames.Map[strings.ToLower(value)]
 			case `font-size`:
-				// TODO: implement font size change via atlas
+				face, err := fileio.LoadTTF("../assets/intuitive.ttf", 30)
+				if err != nil {
+					panic(err)
+				}
+				t.atlas = text.NewAtlas(face, text.ASCII)
 			}
 		}
 	} else if idx == markdownCommandSlice[0].idxEnd {
