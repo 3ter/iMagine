@@ -4,6 +4,8 @@ package scene
 
 import (
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/text"
+	"golang.org/x/image/colornames"
 
 	"github.com/3ter/iMagine/internal/fileio"
 )
@@ -28,9 +30,8 @@ func (p *Player) setDefaultAttributes() {
 	p.fontFace = face
 
 	// pixel.ZV is the zero vector representing the orig(in) (i.e. beginning of the line)
-	// TODO: Check if those need to have default values or not
-	// p.currentTextObject = text.New(pixel.ZV, text.NewAtlas(face, text.ASCII))
-	// p.setTextColor(colornames.Blueviolet)
+	p.currentTextObjects = append(p.currentTextObjects, text.New(pixel.ZV, text.NewAtlas(face, text.ASCII)))
+	p.setTextColor(colornames.Blueviolet)
 
 	p.textBox = new(TextBox)
 	// TODO: Find a good way to know the window dimensions here...
