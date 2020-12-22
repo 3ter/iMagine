@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"time"
 
 	"github.com/3ter/iMagine/internal/scene"
@@ -82,5 +83,8 @@ func run() {
 }
 
 func main() {
+	// to change the flags on the default logger to also print the location (e.g. log.Fatal("Foo"))
+	log.SetFlags(log.LstdFlags | log.Llongfile)
+
 	pixelgl.Run(run)
 }

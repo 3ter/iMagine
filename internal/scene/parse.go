@@ -46,16 +46,27 @@ func getCombinedAmbienceTextResponse(line string, ambienceCmdSlice *[]string) na
 
 // getActiveScriptSlice uses the already loaded script data and returns the current script based on s.progress.
 func (s *Scene) getActiveScriptSlice() []string {
+
+	if len(s.script.file) <= 0 {
+		panic("Script file hasn't been loaded into string.")
+	}
+
 	var activeScript string
 
 	// Find currently active script part and remove progress line
 	hashRegexp := regexp.MustCompile(`(?m:^# )`)
 	scriptParts := hashRegexp.Split(s.script.file, -1)
-	progressRegexp := regexp.MustCompile(`^` + s.progress)
+	if len(scriptParts) <= 0 {
+		panic("Script doesn't contain at least one part marked by '#'.")
+	}
+
+	progressRegexp := regexp.MustCompile(`^` + s.progress + `\n`)
 	for _, scriptPart := range scriptParts {
 		if progressRegexp.MatchString(scriptPart) {
-			untilFirstLineEndRegexp := regexp.MustCompile(`^\w+\n`)
-			activeScript = untilFirstLineEndRegexp.Split(scriptPart, 2)[1]
+			activeScript = progressRegexp.ReplaceAllString(scriptPart, ``)
+			if len(activeScript) <= 0 {
+				panic("Active script empty after removal of progress marker.")
+			}
 			break
 		}
 	}
