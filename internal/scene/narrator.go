@@ -5,8 +5,6 @@ package scene
 import (
 	"github.com/3ter/iMagine/internal/fileio"
 	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/text"
-	"golang.org/x/image/colornames"
 )
 
 // Narrator is defined by its text.
@@ -17,8 +15,6 @@ type Narrator struct {
 	Texter
 }
 
-// TODO: I've repeated myself: Those functions are mostly copied from 'player.go'
-
 // SetDefaultAttributes initializes the Player struct
 func (n *Narrator) setDefaultAttributes() {
 	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
@@ -27,8 +23,9 @@ func (n *Narrator) setDefaultAttributes() {
 	}
 	n.fontFace = face
 	// pixel.ZV is the zero vector representing the orig(in) (i.e. beginning of the line)
-	n.currentTextObject = text.New(pixel.ZV, text.NewAtlas(face, text.ASCII))
-	n.setTextColor(colornames.Blueviolet)
+	// TODO: see player.go same function
+	// n.currentTextObject = text.New(pixel.ZV, text.NewAtlas(face, text.ASCII))
+	// n.setTextColor(colornames.Blueviolet)
 
 	n.textBox = new(TextBox)
 	// TODO: Find a good way to know the window dimensions here...

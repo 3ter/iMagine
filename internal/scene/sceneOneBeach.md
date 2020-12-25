@@ -1,11 +1,11 @@
 # beginning
 `[Audio: Wave.ogg]`
 
-You open your eyes.
+You open your <span style="color:Red; font-size:18px;">eyes</span>.
 
-You find yourself at a beach. You hear the waves come and go, the red sunset reflects on the water’s surface.
+You find yourself at a beach. You hear the waves come and go, the <span style="color:red">red</span> sunset reflects on the water’s surface.
 
-As the sunlight falls, a shiny reflection catches your eye.
+As the sunlight falls, a shiny <span style="color:purple; font-weight:bold; font-size:18px">reflection</span> catches your eye.
 
 `(Inspect reflection) > get_compass`
 

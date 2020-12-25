@@ -39,8 +39,13 @@ type Scene struct {
 	uTime, uSpeed     float32 // pointers to the two uniforms used by fragment shaders
 	isShaderApplied   bool
 
-	face               font.Face
+	face      *font.Face
+	atlas     *text.Atlas
+	textColor color.RGBA
+
+	// TODO: These should probably go or be used for real.
 	txt, title, footer *controltext.SafeText
+
 	// hint is used to provide the player with subtle help messages on screen.
 	hint  *controltext.SafeText
 	typed string
@@ -142,20 +147,23 @@ func (s *Scene) initHintText() {
 
 // Init loads text and music into the Scene struct.
 func (s *Scene) Init() {
+	s.bgColor = colornames.Black
+	s.textColor = colornames.White
+
 	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
 	}
 
-	atlas := text.NewAtlas(face, text.ASCII)
+	s.atlas = text.NewAtlas(face, text.ASCII)
 	s.txt = &controltext.SafeText{
-		Text: text.New(pixel.ZV, atlas),
+		Text: text.New(pixel.ZV, s.atlas),
 	}
 	s.title = &controltext.SafeText{
-		Text: text.New(pixel.ZV, atlas),
+		Text: text.New(pixel.ZV, s.atlas),
 	}
 	s.footer = &controltext.SafeText{
-		Text: text.New(pixel.ZV, atlas),
+		Text: text.New(pixel.ZV, s.atlas),
 	}
 	s.initHintText()
 
@@ -176,4 +184,61 @@ func (s *Scene) Init() {
 func (s *Scene) InitWithFile(scriptFilepath string) {
 	s.Init()
 	s.script.file = fileio.LoadFileToString(scriptFilepath)
+}
+
+// TODO: redo backspace using the 'Repeating' event (see faiface/pixel Wiki for writing texts)
+// handleBackspace is necessary to implement manually as we currently "misuse" the text library in having one text
+// object holding all our text so it is currently replaced entirely though only one character should vanish.
+func handleBackspace(win *pixelgl.Window, player *Player) {
+	if win.JustPressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
+		player.setText(player.currentTextString[:len(player.currentTextString)-1])
+		backspaceCounter = int(-120 * 0.5) // Framerate times seconds to wait until continuous backspace kicks in.
+	} else if win.Pressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
+		backspaceCounter++
+		backspaceDeletionSpeed := int(120 / 40) // Framerate divided by deletions per second.
+		if backspaceCounter > 0 && backspaceCounter%backspaceDeletionSpeed == 0 {
+			player.setText(player.currentTextString[:len(player.currentTextString)-1])
+			backspaceCounter = 0
+		}
+	}
+}
+
+// OnUpdate listens and processes player input on every frame update.
+func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
+	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
+		win.SetClosed(true)
+	}
+	if win.JustPressed(pixelgl.KeyEscape) {
+		gameState = "mainMenu"
+	}
+	handleBackspace(win, &player)
+	if win.JustPressed(pixelgl.KeyEnter) {
+		if len(s.script.responseQueue) == 0 && len(s.script.keywordResponseMap) == 0 {
+			s.parseScriptFile()
+		}
+		s.executeScriptFromQueue()
+	}
+
+	if len(win.Typed()) > 0 {
+		player.addText(win.Typed(), s)
+	}
+
+	return gameState
+}
+
+// Draw draws background and text to the window.
+func (s *Scene) Draw(win *pixelgl.Window) {
+
+	// TODO: I currently see the scene configs as package variables inside their respective files
+	// but the struct initialization in main needs to support this.
+	s.bgColor = getBeachBackgroundColor()
+	win.Clear(s.bgColor)
+	s.textColor = colornames.Black
+
+	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
+	s.hint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.hint.Bounds().Center())).Moved(
+		pixel.V(0, 2*s.hint.Bounds().H())))
+
+	player.drawTextInBox(win)
+	narrator.drawTextLetterByLetter(win)
 }

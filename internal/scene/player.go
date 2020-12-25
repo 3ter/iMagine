@@ -3,12 +3,11 @@
 package scene
 
 import (
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/text"
 	"golang.org/x/image/colornames"
 
-	"github.com/faiface/pixel"
-
 	"github.com/3ter/iMagine/internal/fileio"
-	"github.com/faiface/pixel/text"
 )
 
 // Player is defined by its text and contains the game progression in
@@ -29,8 +28,9 @@ func (p *Player) setDefaultAttributes() {
 		panic(err)
 	}
 	p.fontFace = face
+
 	// pixel.ZV is the zero vector representing the orig(in) (i.e. beginning of the line)
-	p.currentTextObject = text.New(pixel.ZV, text.NewAtlas(face, text.ASCII))
+	p.currentTextObjects = append(p.currentTextObjects, text.New(pixel.ZV, text.NewAtlas(face, text.ASCII)))
 	p.setTextColor(colornames.Blueviolet)
 
 	p.textBox = new(TextBox)
