@@ -5,6 +5,7 @@ package scene
 import (
 	"image/color"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/3ter/iMagine/internal/fileio"
@@ -51,10 +52,6 @@ func (n *Narrator) setDefaultAttributes() {
 		panic(err)
 	}
 	n.fontFace = face
-	// pixel.ZV is the zero vector representing the orig(in) (i.e. beginning of the line)
-	// TODO: see player.go same function
-	// n.currentTextObject = text.New(pixel.ZV, text.NewAtlas(face, text.ASCII))
-	// n.setTextColor(colornames.Blueviolet)
 
 	n.textBox = new(TextBox)
 	// TODO: Find a good way to know the window dimensions here...
@@ -122,8 +119,12 @@ func (n *Narrator) applyMarkdownCommand(markdownCommandSlice []markdownCommand, 
 			case `color`:
 				n.color = colornames.Map[strings.ToLower(value)]
 			case `font-size`:
-				// TODO: Cast value to int accordingly
-				face, err := fileio.LoadTTF("../assets/intuitive.ttf", 30)
+				strippedValue := strings.Replace(value, `px`, ``, 1)
+				fontSize, err := strconv.Atoi(strippedValue)
+				if err != nil {
+					panic(err)
+				}
+				face, err := fileio.LoadTTF("../assets/intuitive.ttf", float64(fontSize))
 				if err != nil {
 					panic(err)
 				}
