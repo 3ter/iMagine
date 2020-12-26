@@ -50,8 +50,9 @@ type Scene struct {
 	hint  *controltext.SafeText
 	typed string
 
-	trackMap      map[int]*effects.Volume
-	IsSceneSwitch bool
+	trackMap       map[int]*effects.Volume
+	IsSceneSwitch  bool
+	isPreventInput bool
 
 	script   Script
 	progress string
@@ -205,6 +206,11 @@ func handleBackspace(win *pixelgl.Window, player *Player) {
 
 // OnUpdate listens and processes player input on every frame update.
 func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
+
+	if s.isPreventInput {
+		return gameState
+	}
+
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 		win.SetClosed(true)
 	}
@@ -240,5 +246,5 @@ func (s *Scene) Draw(win *pixelgl.Window) {
 		pixel.V(0, 2*s.hint.Bounds().H())))
 
 	player.drawTextInBox(win)
-	narrator.drawTextLetterByLetter(win)
+	narrator.drawTextInBox(win)
 }

@@ -1,16 +1,16 @@
 # beginning
 `[Audio: Wave.ogg]`
 
-You open your <span style="color:Red; font-size:18px;">eyes</span>.
+You <span style="text-speed:500">open</span> your <span style="color:Red; font-size:16px;">eyes</span>.
 
-You find yourself at a beach. You hear the waves come and go, the <span style="color:red">red</span> sunset reflects on the water’s surface.
+You find yourself at a beach. <span style="text-speed:2000">You hear the waves come and go</span>, the <span style="color:red">red</span> sunset reflects on the <span style="color:blue">water’s</span> surface.
 
-As the sunlight falls, a shiny <span style="color:purple; font-weight:bold; font-size:18px">reflection</span> catches your eye.
+As the sunlight falls, a shiny <span style="color:purple; font-weight:bold; font-size:25px">reflection</span> catches your eye.
 
 `(Inspect reflection) > get_compass`
 
 # get_compass
-You walk closer to whatever it is that caught your eye. It was glass that reflected sunlight into your eyes. Glass that belonged to a little device. A compass.
+You walk closer to whatever it is that caught your eye. It was glass that reflected sunlight into your eyes. Glass that belonged to a little device.<span style="text-speed:60"> </span>A compass.
 
 `(Pick up compass) > got_compass`
 
