@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/3ter/iMagine/internal/fileio"
 	"github.com/faiface/pixel"
@@ -20,10 +22,13 @@ import (
 // The first being textSpeed for gradually revealed text.
 type NarratorText struct {
 	*text.Text
+	sync.Mutex
 
-	// textSpeed should be measured in CPM (characters per minute)
-	// slow: 50, normal: 100, fast: 150, faster: 200
-	textSpeed int
+	// textSpeed should be measured in CPM (characters per minute).
+	// Average English reading speed seems to be slightly less than 1000:
+	// https://irisreading.com/average-reading-speed-in-various-languages/
+	textSpeed  int
+	isRevealed bool
 }
 
 // Narrator is defined by its text.
@@ -34,6 +39,10 @@ type Narrator struct {
 	atlas    *text.Atlas
 	fontFace font.Face
 	color    color.RGBA
+
+	// see NarratorText.textSpeed
+	textSpeed        int
+	defaultTextSpeed int
 
 	// currentTextObjects contain text objects that define one letter of the current line of the Texter.
 	// In the text library the color can be set via its attribute but for changing the font a new object is needed.
@@ -52,6 +61,7 @@ func (n *Narrator) setDefaultAttributes() {
 		panic(err)
 	}
 	n.fontFace = face
+	n.defaultTextSpeed = 0
 
 	n.textBox = new(TextBox)
 	// TODO: Find a good way to know the window dimensions here...
@@ -110,6 +120,9 @@ func getMarkdownCommandSliceFromString(str string) ([]markdownCommand, string) {
 	return markdownCommandSlice, strippedStr
 }
 
+// applyMarkdownCommand applies a markdown command two times:
+// * if the current index is the start index for the command it applies the changes
+// * if the current index is the end index for the command it reapplies the default values
 func (n *Narrator) applyMarkdownCommand(markdownCommandSlice []markdownCommand, idx int, scn *Scene) {
 
 	if len(markdownCommandSlice) == 0 {
@@ -130,13 +143,21 @@ func (n *Narrator) applyMarkdownCommand(markdownCommandSlice []markdownCommand, 
 				}
 				n.atlas = text.NewAtlas(face, text.ASCII)
 			case `text-speed`:
-				// TODO: Implement
+				strippedValue := strings.Replace(value, `cpm`, ``, 1)
+				textSpeed, err := strconv.Atoi(strippedValue)
+				if err != nil {
+					panic(err)
+				}
+				n.textSpeed = textSpeed
 			}
 		}
 	} else if idx == markdownCommandSlice[0].idxEnd {
+		// Reduce the markdown command slice as this one came to its end.
 		markdownCommandSlice = markdownCommandSlice[1:]
+
 		n.atlas = scn.atlas
 		n.color = scn.textColor
+		n.textSpeed = n.defaultTextSpeed
 	}
 }
 
@@ -154,6 +175,7 @@ func (n *Narrator) convertMarkdownStringToTextObjectsInBox(str string, scn *Scen
 	currentOrig := pixel.V(leftIndent, n.textBox.topLeftCorner.Y-2*n.textBox.margin)
 	n.atlas = scn.atlas
 	n.color = scn.textColor
+	n.textSpeed = n.defaultTextSpeed
 
 	for idx, rune := range str {
 
@@ -168,7 +190,9 @@ func (n *Narrator) convertMarkdownStringToTextObjectsInBox(str string, scn *Scen
 			nextWord = nextWordRegexp.FindString(str[(idx + 1):])
 		}
 
-		newTextObject := &NarratorText{Text: text.New(currentOrig, n.atlas)}
+		newTextObject := &NarratorText{
+			Text:      text.New(currentOrig, n.atlas),
+			textSpeed: n.textSpeed}
 		n.currentTextObjects = append(n.currentTextObjects, newTextObject)
 		newTextObject.Color = n.color
 
@@ -194,7 +218,9 @@ func (n *Narrator) setTextRangeFontFace(face font.Face, indexStart, indexEnd int
 		} else if idx >= indexEnd {
 			break
 		}
-		textObj = &NarratorText{Text: text.New(textObj.Orig, text.NewAtlas(face, text.ASCII))}
+		textObj = &NarratorText{
+			Text:      text.New(textObj.Orig, text.NewAtlas(face, text.ASCII)),
+			textSpeed: n.textSpeed}
 		// The newly created *text.Text doesn't contain any glyphs to draw yet
 		currLetter := string(n.currentTextString[idx])
 		textObj.WriteString(currLetter)
@@ -212,18 +238,41 @@ func (n *Narrator) setTextRangeColor(col color.Color, indexStart, indexEnd int) 
 	}
 }
 
+func (n *Narrator) graduallyRevealText(scn *Scene) {
+
+	scn.isPreventInput = true
+
+	sleepTime := 0
+	for _, textObj := range n.currentTextObjects {
+		textObj.isRevealed = true
+
+		sleepTime = 0
+		if textObj.textSpeed != 0 {
+			sleepTime = 1000 * 60 / textObj.textSpeed
+		}
+		time.Sleep(time.Duration(sleepTime) * time.Millisecond)
+	}
+
+	scn.isPreventInput = false
+}
+
 // setText accepts a string with potential markdown formatting containing HTML with inline CSS for text formatting.
 // e.g. roses are <span style="color:red">red</span>
 // Online LF "\n" is used to mark a new line.
 func (n *Narrator) setTextLetterByLetter(str string, scn *Scene) {
 
 	n.convertMarkdownStringToTextObjectsInBox(str, scn)
+	go n.graduallyRevealText(scn)
 }
 
-func (n *Narrator) drawTextLetterByLetter(win *pixelgl.Window) {
+// drawTextInBox is called every frame to display the narrator's text (after it has been gradually revealed).
+func (n *Narrator) drawTextInBox(win *pixelgl.Window) {
 	n.textBox.drawTextBox(win)
 
 	for _, textObj := range n.currentTextObjects {
+		if !textObj.isRevealed {
+			break
+		}
 		textObj.Draw(win, pixel.IM)
 	}
 }

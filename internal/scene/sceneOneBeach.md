@@ -3,7 +3,7 @@
 
 You open your <span style="color:Red; font-size:16px;">eyes</span>.
 
-You find yourself at a beach. You hear the waves come and go, the <span style="color:red">red</span> sunset reflects on the water’s surface.
+You find yourself at a beach. <span style="text-speed:2000">You hear the waves come and go</span>, the <span style="color:red">red</span> sunset reflects on the <span style="color:blue">water’s</span> surface.
 
 As the sunlight falls, a shiny <span style="color:purple; font-weight:bold; font-size:25px">reflection</span> catches your eye.
 
