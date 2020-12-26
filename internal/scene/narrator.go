@@ -61,7 +61,7 @@ func (n *Narrator) setDefaultAttributes() {
 		panic(err)
 	}
 	n.fontFace = face
-	n.defaultTextSpeed = 0
+	n.defaultTextSpeed = 1500
 
 	n.textBox = new(TextBox)
 	// TODO: Find a good way to know the window dimensions here...
@@ -123,11 +123,11 @@ func getMarkdownCommandSliceFromString(str string) ([]markdownCommand, string) {
 // applyMarkdownCommand applies a markdown command two times:
 // * if the current index is the start index for the command it applies the changes
 // * if the current index is the end index for the command it reapplies the default values
-func (n *Narrator) applyMarkdownCommand(markdownCommandSlice []markdownCommand, idx int, scn *Scene) {
+func (n *Narrator) applyMarkdownCommand(markdownCommandSlice *[]markdownCommand, idx int, scn *Scene) {
 
-	if len(markdownCommandSlice) == 0 {
-	} else if idx == markdownCommandSlice[0].idxStart {
-		for attribute, value := range markdownCommandSlice[0].attributeValueMap {
+	if len(*markdownCommandSlice) == 0 {
+	} else if idx == (*markdownCommandSlice)[0].idxStart {
+		for attribute, value := range (*markdownCommandSlice)[0].attributeValueMap {
 			switch attribute {
 			case `color`:
 				n.color = colornames.Map[strings.ToLower(value)]
@@ -151,9 +151,9 @@ func (n *Narrator) applyMarkdownCommand(markdownCommandSlice []markdownCommand, 
 				n.textSpeed = textSpeed
 			}
 		}
-	} else if idx == markdownCommandSlice[0].idxEnd {
+	} else if idx == (*markdownCommandSlice)[0].idxEnd {
 		// Reduce the markdown command slice as this one came to its end.
-		markdownCommandSlice = markdownCommandSlice[1:]
+		*markdownCommandSlice = (*markdownCommandSlice)[1:]
 
 		n.atlas = scn.atlas
 		n.color = scn.textColor
@@ -179,7 +179,7 @@ func (n *Narrator) convertMarkdownStringToTextObjectsInBox(str string, scn *Scen
 
 	for idx, rune := range str {
 
-		n.applyMarkdownCommand(markdownCommandSlice, idx, scn)
+		n.applyMarkdownCommand(&markdownCommandSlice, idx, scn)
 
 		char := string(rune)
 		switch char {
