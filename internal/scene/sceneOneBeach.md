@@ -10,7 +10,9 @@ As the sunlight falls, a shiny <span style="color:purple; font-weight:bold; font
 `(Inspect reflection) > get_compass`
 
 # get_compass
-You walk closer to whatever it is that caught your eye. It was glass that reflected sunlight into your eyes. Glass that belonged to a little device.<span style="text-speed:60"> </span>A compass.
+You walk closer to whatever it is that caught your eye.
+
+It was glass that reflected sunlight into your eyes. Glass that belonged to a little device.<span style="text-speed:60"> </span>A compass.
 
 `(Pick up compass) > got_compass`
 

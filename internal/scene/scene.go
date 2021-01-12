@@ -46,9 +46,10 @@ type Scene struct {
 	// TODO: These should probably go or be used for real.
 	txt, title, footer *controltext.SafeText
 
-	// hint is used to provide the player with subtle help messages on screen.
-	hint  *controltext.SafeText
-	typed string
+	// hints are used to provide the player with subtle help messages on screen.
+	narratorBoxHint *controltext.SafeText
+	playerBoxHint   *controltext.SafeText
+	typed           string
 
 	trackMap       map[int]*effects.Volume
 	IsSceneSwitch  bool
@@ -139,11 +140,16 @@ func (s *Scene) initHintText() {
 
 	atlas := text.NewAtlas(face, text.ASCII)
 
-	s.hint = &controltext.SafeText{
+	s.narratorBoxHint = &controltext.SafeText{
 		Text: text.New(pixel.ZV, atlas),
 	}
-	s.hint.Color = colornames.Gray
-	s.hint.WriteString("Press Enter to continue.")
+	s.narratorBoxHint.Color = colornames.Gray
+	s.narratorBoxHint.WriteString("Press Enter to continue.")
+
+	s.playerBoxHint = &controltext.SafeText{
+		Text: text.New(pixel.ZV, atlas),
+	}
+	s.playerBoxHint.Color = colornames.Gray
 }
 
 // Init loads text and music into the Scene struct.
@@ -204,6 +210,18 @@ func handleBackspace(win *pixelgl.Window, player *Player) {
 	}
 }
 
+func (s *Scene) updateHintTexts() {
+	if len(s.script.responseQueue) == 0 && len(s.script.keywordResponseMap) > 0 {
+		s.playerBoxHint.Clear()
+		s.narratorBoxHint.Clear()
+		s.playerBoxHint.WriteString("Write a command and press Enter.")
+	} else {
+		s.narratorBoxHint.Clear()
+		s.playerBoxHint.Clear()
+		s.narratorBoxHint.WriteString("Press Enter to continue.")
+	}
+}
+
 // OnUpdate listens and processes player input on every frame update.
 func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
 
@@ -223,6 +241,8 @@ func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
 			s.parseScriptFile()
 		}
 		s.executeScriptFromQueue()
+
+		s.updateHintTexts()
 	}
 
 	if len(win.Typed()) > 0 {
@@ -242,8 +262,10 @@ func (s *Scene) Draw(win *pixelgl.Window) {
 	s.textColor = colornames.Black
 
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
-	s.hint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.hint.Bounds().Center())).Moved(
-		pixel.V(0, 2*s.hint.Bounds().H())))
+	s.narratorBoxHint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.narratorBoxHint.Bounds().Center())).Moved(
+		pixel.V(0, 2*s.narratorBoxHint.Bounds().H())))
+	s.playerBoxHint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.playerBoxHint.Bounds().Center())).Moved(
+		pixel.V(0, -5.5*s.playerBoxHint.Bounds().H())))
 
 	player.drawTextInBox(win)
 	narrator.drawTextInBox(win)
