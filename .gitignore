@@ -16,3 +16,4 @@
 
 # IDE files
 .vscode/
+*__debug_bin
