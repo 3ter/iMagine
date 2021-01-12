@@ -60,19 +60,19 @@ func (s *Scene) getActiveScriptSlice() []string {
 		panic("Script doesn't contain at least one part marked by '#'.")
 	}
 
-	progressRegexp := regexp.MustCompile(`^` + s.progress + `\n`)
+	progressRegexp := regexp.MustCompile(`^` + s.progress + `\r?\n`)
 	for _, scriptPart := range scriptParts {
 		if progressRegexp.MatchString(scriptPart) {
 			activeScript = progressRegexp.ReplaceAllString(scriptPart, ``)
-			if len(activeScript) <= 0 {
-				panic("Active script empty after removal of progress marker.")
-			}
 			break
 		}
 	}
+	if len(activeScript) <= 0 {
+		panic("Active script empty after removal of progress marker.")
+	}
 
 	// Separate directives (ambience / text / keywords) by a blank line
-	blankLineRegexp := regexp.MustCompile(`\n\n`)
+	blankLineRegexp := regexp.MustCompile(`\r?\n\r?\n`)
 	activeScriptSlice := blankLineRegexp.Split(activeScript, -1)
 	activeScriptSlice = activeScriptSlice[:len(activeScriptSlice)-1] // to remove last element (empty string)
 
