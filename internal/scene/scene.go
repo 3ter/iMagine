@@ -224,7 +224,7 @@ func (s *Scene) updateHintTexts() {
 
 // OnUpdate listens and processes player input on every frame update.
 func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
-
+	s.loadMapConfig()
 	if s.isPreventInput {
 		return gameState
 	}

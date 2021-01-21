@@ -3,6 +3,7 @@
 package scene
 
 import (
+	"encoding/json"
 	"regexp"
 	"strings"
 
@@ -186,4 +187,23 @@ func (s *Scene) parseScriptFile() {
 			break
 		}
 	}
+}
+
+// MapConfig contains key/value-pairs for a scene that are intended to save
+// * which scenes are adjacent to the current one
+// * the state of the scene
+type MapConfig struct {
+	North string
+	East  string
+	South string
+	West  string
+	Look  string
+}
+
+func (s *Scene) loadMapConfig(filename string) {
+	jsonBytes := fileio.LoadFileToBytes(filename)
+
+	var mapConfig MapConfig
+	json.Unmarshal(jsonBytes, &mapConfig)
+
 }
