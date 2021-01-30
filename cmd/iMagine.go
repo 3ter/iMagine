@@ -31,7 +31,7 @@ func gameloop(win *pixelgl.Window) {
 	var forestScene = scene.ForestScene
 	demoScene.Init()
 	demoScene.InitDemoScene()
-	beachScene.InitWithFile(`../scene/sceneOneBeach.md`)
+	beachScene.InitWithFile(`../scene/sceneBeach.md`)
 	mainScene.Init()
 	forestScene.Init()
 
