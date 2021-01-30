@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/3ter/iMagine/fileio"
 	"github.com/faiface/beep/speaker"
 )
 

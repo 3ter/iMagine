@@ -5,7 +5,7 @@ package scene
 import (
 	"image/color"
 
-	"github.com/3ter/iMagine/internal/controltext"
+	"github.com/3ter/iMagine/controltext"
 	"golang.org/x/image/colornames"
 )
 

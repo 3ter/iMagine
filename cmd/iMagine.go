@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/3ter/iMagine/internal/scene"
+	"github.com/3ter/iMagine/scene"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 
@@ -31,7 +31,7 @@ func gameloop(win *pixelgl.Window) {
 	var forestScene = scene.ForestScene
 	demoScene.Init()
 	demoScene.InitDemoScene()
-	beachScene.InitWithFile(`../internal/scene/sceneOneBeach.md`)
+	beachScene.InitWithFile(`../scene/sceneOneBeach.md`)
 	mainScene.Init()
 	forestScene.Init()
 

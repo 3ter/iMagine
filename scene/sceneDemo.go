@@ -5,9 +5,9 @@ import (
 	"image/color"
 	"time"
 
-	"github.com/3ter/iMagine/internal/controlaudio"
-	"github.com/3ter/iMagine/internal/controltext"
-	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/3ter/iMagine/controlaudio"
+	"github.com/3ter/iMagine/controltext"
+	"github.com/3ter/iMagine/fileio"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"

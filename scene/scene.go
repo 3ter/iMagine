@@ -1,3 +1,5 @@
+// Package scene implements functions to provide the contents of a scene
+// like the backgrounds and texts and music.
 package scene
 
 import (
@@ -6,7 +8,7 @@ import (
 
 	"golang.org/x/image/colornames"
 
-	"github.com/3ter/iMagine/internal/controltext"
+	"github.com/3ter/iMagine/controltext"
 
 	"github.com/faiface/pixel/pixelgl"
 
@@ -23,8 +25,8 @@ import (
 	//"golang.org/x/image/font/gofont/gobold"
 	//"golang.org/x/image/font/gofont/goregular"
 
-	//"github.com/3ter/iMagine/internal/controlaudio"
-	"github.com/3ter/iMagine/internal/fileio"
+	//"github.com/3ter/iMagine/controlaudio"
+	"github.com/3ter/iMagine/fileio"
 )
 
 var player Player
@@ -224,7 +226,6 @@ func (s *Scene) updateHintTexts() {
 
 // OnUpdate listens and processes player input on every frame update.
 func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
-	s.loadMapConfig()
 	if s.isPreventInput {
 		return gameState
 	}
