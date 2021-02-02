@@ -158,6 +158,7 @@ func (s *Scene) initHintText() {
 }
 
 // Init loads text and music into the Scene struct.
+// TODO: See below function for getting a scene with default values
 func (s *Scene) Init() {
 	s.bgColor = colornames.Black
 	s.textColor = colornames.White
@@ -196,6 +197,34 @@ func (s *Scene) Init() {
 func (s *Scene) InitWithFile(scriptFilepath string) {
 	s.Init()
 	s.script.fileContent = fileio.LoadFileToString(scriptFilepath)
+}
+
+func getSceneObjectWithDefaults() *Scene {
+
+	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
+	if err != nil {
+		panic(err)
+	}
+
+	defaultScene := &Scene{
+		bgColor:   colornames.Black,
+		textColor: colornames.White,
+		atlas:     text.NewAtlas(face, text.ASCII),
+
+		trackMap: make(map[int]*effects.Volume),
+
+		fragmentShader: fileio.LoadFileToString("../assets/wavy_shader.glsl"),
+		//TODO: this shader does not do a true passthrough yet and only converts to grayscale
+		passthroughShader: fileio.LoadFileToString("../assets/passthrough_shader.glsl"),
+		uSpeed:            5.0,
+		isShaderApplied:   false,
+
+		progress: "beginning",
+	}
+
+	defaultScene.initHintText()
+
+	return defaultScene
 }
 
 // TODO: redo backspace using the 'Repeating' event (see faiface/pixel Wiki for writing texts)

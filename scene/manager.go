@@ -23,20 +23,22 @@ func loadFilesToSceneMap() {
 		panic("Scenes directory '" + ScenesDir + "' couldn't be read!")
 	}
 	for _, sceneFile := range sceneFileSlice {
-		sceneMarkdownFileFilter := regexp.MustCompile(`^scene(\w+)\.md$`)
-		sceneJSONFileFilter := regexp.MustCompile(`^scene(\w+)\.json$`)
+		sceneFileFilter := regexp.MustCompile(`^scene(\w+)\.(md|json)$`)
 
-		markdownFileMatchSlice := sceneMarkdownFileFilter.FindStringSubmatch(sceneFile.Name())
-		if markdownFileMatchSlice != nil {
-			markdownFileScene := markdownFileMatchSlice[1]
-			scenesMap[markdownFileScene].script.filePath = ScenesDir + `/` + markdownFileScene + `.md`
-			continue
-		}
-		jsonFileMatchSlice := sceneJSONFileFilter.FindStringSubmatch(sceneFile.Name())
-		if jsonFileMatchSlice != nil {
-			jsonFileScene := jsonFileMatchSlice[1]
-			scenesMap[jsonFileScene].mapConfigPath = ScenesDir + `/` + jsonFileScene + `.md`
-			continue
+		FileMatchSlice := sceneFileFilter.FindStringSubmatch(sceneFile.Name())
+		if len(FileMatchSlice) == 3 {
+			FileScene := FileMatchSlice[1]
+			FileExtension := FileMatchSlice[2]
+
+			if scenesMap[FileScene] == nil {
+				scenesMap[FileScene] = getSceneObjectWithDefaults()
+			}
+
+			if FileExtension == `md` {
+				scenesMap[FileScene].script.filePath = ScenesDir + FileScene + `.md`
+			} else if FileExtension == `json` {
+				scenesMap[FileScene].mapConfigPath = ScenesDir + FileScene + `.json`
+			}
 		}
 	}
 
