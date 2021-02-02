@@ -57,13 +57,16 @@ type Scene struct {
 	IsSceneSwitch  bool
 	isPreventInput bool
 
-	script   Script
-	progress string
+	script        Script
+	progress      string
+	mapConfigPath string
+	mapConfig     MapConfig
 }
 
 // Script groups all info from the (markdown) script to make it available to functions within a scene
 type Script struct {
-	file string
+	filePath    string
+	fileContent string
 	// responseQueue contains the responses that still need to be delivered before player commands become active again.
 	responseQueue []narratorResponse
 	// keywordResponseMap contains a map from the player commands that are understood to a slice of narratorResponses.
@@ -192,7 +195,7 @@ func (s *Scene) Init() {
 // InitWithFile initializes a scene using a scene script file which then should be parsed.
 func (s *Scene) InitWithFile(scriptFilepath string) {
 	s.Init()
-	s.script.file = fileio.LoadFileToString(scriptFilepath)
+	s.script.fileContent = fileio.LoadFileToString(scriptFilepath)
 }
 
 // TODO: redo backspace using the 'Repeating' event (see faiface/pixel Wiki for writing texts)
