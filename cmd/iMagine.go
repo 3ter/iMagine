@@ -28,33 +28,25 @@ func gameloop(win *pixelgl.Window) {
 	var demoScene = scene.DemoScene
 	var beachScene = scene.BeachScene
 	var mainScene = scene.MainScene
-	var forestScene = scene.ForestScene
 	demoScene.Init()
 	demoScene.InitDemoScene()
 	beachScene.InitWithFile(`../scene/sceneBeach.md`)
 	mainScene.Init()
-	forestScene.Init()
 
 	for !win.Closed() {
 
 		switch gameState {
+
 		case "Quit":
 			win.SetClosed(true)
+
 		case "mainMenu":
 			prevGameState = gameState
-
 			gameState = mainScene.HandleMainMenuAndReturnState(win)
 
 		case "Start":
 			gameState = beachScene.OnUpdate(win, gameState)
 			beachScene.Draw(win)
-
-		case "Forest":
-			prevGameState = gameState
-			gameState = forestScene.HandleForestSceneInput(win, gameState)
-			forestScene.TypeForestTitle()
-			forestScene.DrawForestScene(win)
-			forestScene.IsSceneSwitch = (gameState != prevGameState)
 
 		case "Demo":
 			prevGameState = gameState

@@ -76,10 +76,11 @@ type mainMenuItem struct {
 }
 
 var menuItems = []*mainMenuItem{
-	&mainMenuItem{"Demo", "selected"},
-	&mainMenuItem{"Start", "unselected"},
-	&mainMenuItem{"Forest", "unselected"},
-	&mainMenuItem{"Quit", "unselected"}}
+	{"Demo", "selected"},
+	{"Start", "unselected"},
+	{"Forest", "unselected"},
+	{"Quit", "unselected"},
+}
 
 func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
 	menuTexts := make([]*text.Text, len(menuItems))
