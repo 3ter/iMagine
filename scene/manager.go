@@ -16,7 +16,7 @@ const ScenesDir = `../scene/`
 var scenesMap map[string]*Scene
 
 func loadFilesToSceneMap() {
-	scenesMap := make(map[string]*Scene)
+	scenesMap = make(map[string]*Scene)
 
 	sceneFileSlice, err := ioutil.ReadDir(ScenesDir)
 	if err != nil {
@@ -42,7 +42,5 @@ func loadFilesToSceneMap() {
 		}
 	}
 
-	// TODO: Init the Scene (key) in the map at the right time (and only once)
 	// TODO: Load contents as well... let's see the performance hit...
-	_ = sceneFileSlice
 }
