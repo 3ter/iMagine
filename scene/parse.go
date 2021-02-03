@@ -133,7 +133,18 @@ func executeAmbienceCommands(ambienceCmdSlice []string) {
 	}
 }
 
-// executeScriptFromQueue returns true if the queue is empty and all commands have been executed.
+func handleSpecialPlayerCommands(playerCommandString string) {
+	playerWords := strings.Split(playerCommandString, ` `)
+	// TODO: Implement the 'go' verb first to visit other maps
+	// This entails the handling of the script progress and queues!
+	_ = playerWords
+}
+
+// executeScriptFromQueue modfies the scene according to scene script and player input.
+//
+// If the scene modifications are still to be fed from the 'responseQueue' the function returns without checking player
+// input.
+// The check for progress change provides a way to jump from sectino within a scene script.
 func (s *Scene) executeScriptFromQueue() {
 
 	if len(s.script.responseQueue) > 0 {
@@ -149,6 +160,8 @@ func (s *Scene) executeScriptFromQueue() {
 
 	playerProvidedKeyword := player.currentTextString
 	player.setText("")
+
+	handleSpecialPlayerCommands(playerProvidedKeyword)
 
 	// Check for progress change
 	for keyword, responseSlice := range s.script.keywordResponseMap {

@@ -17,6 +17,7 @@ import (
 var (
 	gameState     = "mainMenu"
 	prevGameState = ""
+	currentScene  = `Beach`
 )
 
 func gameloop(win *pixelgl.Window) {
@@ -33,6 +34,8 @@ func gameloop(win *pixelgl.Window) {
 	beachScene.InitWithFile(`../scene/sceneBeach.md`)
 	mainScene.Init()
 
+	scene.LoadFilesToSceneMap()
+
 	for !win.Closed() {
 
 		switch gameState {
@@ -45,8 +48,8 @@ func gameloop(win *pixelgl.Window) {
 			gameState = mainScene.HandleMainMenuAndReturnState(win)
 
 		case "Start":
-			gameState = beachScene.OnUpdate(win, gameState)
-			beachScene.Draw(win)
+			gameState = scene.ScenesMap[currentScene].OnUpdate(win, gameState)
+			scene.ScenesMap[currentScene].Draw(win)
 
 		case "Demo":
 			prevGameState = gameState

@@ -15,8 +15,8 @@ import (
 // ScenesDir publishes the directory where its files are stored
 const ScenesDir = `../scene/`
 
-// scenesMap maps scene identifiers (e.g. 'Beach') to their respective scene object
-var scenesMap map[string]*Scene
+// ScenesMap maps scene identifiers (e.g. 'Beach') to their respective scene object
+var ScenesMap map[string]*Scene
 
 // MapConfig contains key/value-pairs for a scene that are intended to save
 // * which scenes are adjacent to the current one
@@ -35,8 +35,9 @@ func (s *Scene) loadMapConfig(filename string) {
 	json.Unmarshal(jsonBytes, &s.mapConfig)
 }
 
-func loadFilesToSceneMap() {
-	scenesMap = make(map[string]*Scene)
+// LoadFilesToSceneMap fills the global variable 'ScenesMap' with filepaths and contents
+func LoadFilesToSceneMap() {
+	ScenesMap = make(map[string]*Scene)
 
 	sceneFileSlice, err := ioutil.ReadDir(ScenesDir)
 	if err != nil {
@@ -51,19 +52,17 @@ func loadFilesToSceneMap() {
 			fileScene := fileMatchSlice[1]
 			fileExtension := fileMatchSlice[2]
 
-			if scenesMap[fileScene] == nil {
-				scenesMap[fileScene] = getSceneObjectWithDefaults()
+			if ScenesMap[fileScene] == nil {
+				ScenesMap[fileScene] = getSceneObjectWithDefaults()
 			}
 
 			if fileExtension == `md` {
-				scenesMap[fileScene].script.filePath = filePath
-				scenesMap[fileScene].script.fileContent = fileio.LoadFileToString(filePath)
+				ScenesMap[fileScene].script.filePath = filePath
+				ScenesMap[fileScene].script.fileContent = fileio.LoadFileToString(filePath)
 			} else if fileExtension == `json` {
-				scenesMap[fileScene].mapConfigPath = filePath
-				scenesMap[fileScene].loadMapConfig(filePath)
+				ScenesMap[fileScene].mapConfigPath = filePath
+				ScenesMap[fileScene].loadMapConfig(filePath)
 			}
 		}
 	}
-
-	// TODO: Load contents as well... let's see the performance hit...
 }

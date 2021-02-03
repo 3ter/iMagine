@@ -294,7 +294,6 @@ func (s *Scene) Draw(win *pixelgl.Window) {
 	win.Clear(s.bgColor)
 	s.textColor = colornames.Black
 
-	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
 	s.narratorBoxHint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.narratorBoxHint.Bounds().Center())).Moved(
 		pixel.V(0, 2*s.narratorBoxHint.Bounds().H())))
 	s.playerBoxHint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.playerBoxHint.Bounds().Center())).Moved(
