@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/3ter/iMagine/fileio"
 	"github.com/faiface/beep/speaker"
 )
 
@@ -47,7 +47,7 @@ func getCombinedAmbienceTextResponse(line string, ambienceCmdSlice *[]string) na
 // getActiveScriptSlice uses the already loaded script data and returns the current script based on s.progress.
 func (s *Scene) getActiveScriptSlice() []string {
 
-	if len(s.script.file) <= 0 {
+	if len(s.script.fileContent) <= 0 {
 		panic("Script file hasn't been loaded into string.")
 	}
 
@@ -55,7 +55,7 @@ func (s *Scene) getActiveScriptSlice() []string {
 
 	// Find currently active script part and remove progress line
 	hashRegexp := regexp.MustCompile(`(?m:^# )`)
-	scriptParts := hashRegexp.Split(s.script.file, -1)
+	scriptParts := hashRegexp.Split(s.script.fileContent, -1)
 	if len(scriptParts) <= 0 {
 		panic("Script doesn't contain at least one part marked by '#'.")
 	}
@@ -133,26 +133,40 @@ func executeAmbienceCommands(ambienceCmdSlice []string) {
 	}
 }
 
-// executeScriptFromQueue returns true if the queue is empty and all commands have been executed.
-func (s *Scene) executeScriptFromQueue() {
+func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
 
-	if len(s.script.responseQueue) > 0 {
-		executeAmbienceCommands(s.script.responseQueue[0].ambienceCmdSlice)
+	// TODO: Implement the 'go' verb first to visit other maps
+	// This entails the handling of the script progress and queues!
+	if len(playerWords) < 2 {
+		narrator.setTextLetterByLetter("Specify your command in the format: '[verb] [object]'", s)
+		return
 	}
+	verb := playerWords[0]
+	object := playerWords[1]
+	switch verb {
+	case `go`:
+		if ScenesMap[object] == nil {
+			narrator.setTextLetterByLetter("You can't go to "+object+"!", s)
+			return
+		}
+		// To allow parsing of the newly selected current script file (see 'scene.OnUpdate')
+		s.script.keywordResponseMap = nil
+		CurrentScene = object
+	}
+}
 
-	// Set narrator text
-	if len(s.script.responseQueue) > 0 {
-		narrator.setTextLetterByLetter(s.script.responseQueue[0].narratorTextLine, s)
-		s.script.responseQueue = s.script.responseQueue[1:]
+func (s *Scene) handlePlayerCommand(playerInput string) {
+
+	playerWords := strings.Split(playerInput, ` `)
+
+	if len(playerWords[0]) > 0 && playerWords[0] == `go` {
+		s.handleSpecialPlayerCommands(playerWords)
 		return
 	}
 
-	playerProvidedKeyword := player.currentTextString
-	player.setText("")
-
 	// Check for progress change
 	for keyword, responseSlice := range s.script.keywordResponseMap {
-		if strings.ToLower(playerProvidedKeyword) == strings.ToLower(keyword) {
+		if strings.ToLower(playerInput) == strings.ToLower(keyword) {
 			// If there's a progressUpdate then there's only one response in the slice
 			if responseSlice[0].progressUpdate != "" {
 				s.progress = responseSlice[0].progressUpdate
@@ -168,6 +182,30 @@ func (s *Scene) executeScriptFromQueue() {
 	}
 }
 
+// executeScriptFromQueue modfies the scene according to scene script and player input.
+//
+// If the scene modifications are still to be fed from the 'responseQueue' the function returns without checking player
+// input.
+// The check for progress change provides a way to jump from section within a scene script.
+func (s *Scene) executeScriptFromQueue() {
+
+	if len(s.script.responseQueue) > 0 {
+		executeAmbienceCommands(s.script.responseQueue[0].ambienceCmdSlice)
+	}
+
+	// Set narrator text
+	if len(s.script.responseQueue) > 0 {
+		narrator.setTextLetterByLetter(s.script.responseQueue[0].narratorTextLine, s)
+		s.script.responseQueue = s.script.responseQueue[1:]
+		return
+	}
+
+	playerInput := player.currentTextString
+	player.setText("")
+
+	s.handlePlayerCommand(playerInput)
+}
+
 func (s *Scene) parseScriptFile() {
 
 	activeScriptSlice := s.getActiveScriptSlice()
@@ -180,6 +218,7 @@ func (s *Scene) parseScriptFile() {
 			s.script.responseQueue = append(s.script.responseQueue, response)
 		}
 
+		// break loop if the first player keyword is found and gobble up the rest of the lines
 		keywordResponseMap := getKeywordResponseMap(scriptLine, lineNumber, activeScriptSlice)
 		if len(keywordResponseMap) > 0 {
 			s.script.keywordResponseMap = keywordResponseMap

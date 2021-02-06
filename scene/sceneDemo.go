@@ -5,14 +5,15 @@ import (
 	"image/color"
 	"time"
 
-	"github.com/3ter/iMagine/internal/controlaudio"
-	"github.com/3ter/iMagine/internal/controltext"
-	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/3ter/iMagine/controlaudio"
+	"github.com/3ter/iMagine/controltext"
+	"github.com/3ter/iMagine/fileio"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/faiface/pixel/text"
 	"golang.org/x/image/colornames"
 )
 
@@ -23,8 +24,23 @@ var (
 	isMusicPlaying = false
 )
 
-// InitDemoScene loads all assets for the scene
-func (s *Scene) InitDemoScene() {
+// initDemo loads all demo specific assets for the scene
+func (s *Scene) initDemo() {
+
+	s.IsSceneSwitch = true
+
+	s.bgColor = colornames.Black
+	s.textColor = colornames.Wheat
+
+	s.txt = &controltext.SafeText{
+		Text: text.New(pixel.ZV, s.atlas),
+	}
+	s.title = &controltext.SafeText{
+		Text: text.New(pixel.ZV, s.atlas),
+	}
+	s.footer = &controltext.SafeText{
+		Text: text.New(pixel.ZV, s.atlas),
+	}
 
 	var trackArray = [4]string{"Celesta.ogg", "Choir.ogg", "Harp.ogg", "Strings.ogg"}
 	var trackPath = "../assets/"
@@ -36,16 +52,21 @@ func (s *Scene) InitDemoScene() {
 	}
 }
 
-// HandleDemoInput listens and processes player input.
-func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
+// OnUpdateDemo listens and processes player input.
+func (s *Scene) onUpdateDemo(win *pixelgl.Window) {
 
-	var gameState = "Demo"
+	if s.IsSceneSwitch {
+		s.writeDemoText()
+	}
+	s.IsSceneSwitch = (previousScene != CurrentScene)
+	previousScene = CurrentScene
+
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 		win.SetClosed(true)
 	}
 	if win.JustPressed(pixelgl.KeyEscape) {
-		gameState = "mainMenu"
-		return gameState
+		CurrentScene = "MainMenu"
+		return
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyU) {
@@ -88,10 +109,10 @@ func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyS) {
 
 		if s.isShaderApplied {
-			s.clearShader(win, start)
+			s.clearShader(win)
 			s.isShaderApplied = false
 		} else {
-			s.applyShader(win, start)
+			s.applyShader(win)
 			s.isShaderApplied = true
 
 		}
@@ -120,7 +141,6 @@ func (s *Scene) HandleDemoInput(win *pixelgl.Window, start time.Time) string {
 
 		go s.setSceneSwitchTrueInTime(2 * time.Second)
 	}
-	return gameState
 }
 
 func (s *Scene) writeDemoText() {
@@ -158,11 +178,8 @@ func (s *Scene) writeDemoText() {
 
 }
 
-// DrawDemoScene draws background and text to the window.
-func (s *Scene) DrawDemoScene(win *pixelgl.Window, start time.Time) {
-	if s.IsSceneSwitch {
-		s.writeDemoText()
-	}
+// DrawDemo draws background and text to the window.
+func (s *Scene) drawDemo(win *pixelgl.Window, start time.Time) {
 
 	if s.isShaderApplied {
 		s.updateShader(s.uSpeed, start)
@@ -170,6 +187,6 @@ func (s *Scene) DrawDemoScene(win *pixelgl.Window, start time.Time) {
 
 	win.Clear(s.bgColor)
 	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 250)))
-	s.footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, -150)))
+	s.footer.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.footer.Bounds().Center())).Moved(pixel.V(0, -150)))
 	s.txt.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.txt.Bounds().Center())).Moved(pixel.V(0, 50)))
 }

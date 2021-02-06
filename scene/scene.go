@@ -1,12 +1,15 @@
+// Package scene implements functions to provide the contents of a scene
+// like the backgrounds and texts and music.
 package scene
 
 import (
 	"image/color"
+	"sync"
 	"time"
 
 	"golang.org/x/image/colornames"
 
-	"github.com/3ter/iMagine/internal/controltext"
+	"github.com/3ter/iMagine/controltext"
 
 	"github.com/faiface/pixel/pixelgl"
 
@@ -23,16 +26,24 @@ import (
 	//"golang.org/x/image/font/gofont/gobold"
 	//"golang.org/x/image/font/gofont/goregular"
 
-	//"github.com/3ter/iMagine/internal/controlaudio"
-	"github.com/3ter/iMagine/internal/fileio"
+	//"github.com/3ter/iMagine/controlaudio"
+	"github.com/3ter/iMagine/fileio"
 )
 
 var player Player
 var narrator Narrator
 var window *pixelgl.Window
 
+type threadSafeBool struct {
+	value bool
+	sync.Mutex
+}
+
 // Scene contains basic settings and assets (font, music, shaders, content)
 type Scene struct {
+	// Name is the scene identifier which is used in 'OnUpdate' to determine the functions to call
+	Name string
+
 	bgColor           color.RGBA //= colornames.Black
 	fragmentShader    string     // =fileio.LoadFileToString("../assets/wavy_shader.glsl")
 	passthroughShader string
@@ -51,17 +62,21 @@ type Scene struct {
 	playerBoxHint   *controltext.SafeText
 	typed           string
 
-	trackMap       map[int]*effects.Volume
-	IsSceneSwitch  bool
-	isPreventInput bool
+	trackMap          map[int]*effects.Volume
+	IsSceneSwitch     bool
+	isPreventInput    threadSafeBool
+	isImmediateReveal threadSafeBool
 
-	script   Script
-	progress string
+	script        Script
+	progress      string
+	mapConfigPath string
+	mapConfig     MapConfig
 }
 
 // Script groups all info from the (markdown) script to make it available to functions within a scene
 type Script struct {
-	file string
+	filePath    string
+	fileContent string
 	// responseQueue contains the responses that still need to be delivered before player commands become active again.
 	responseQueue []narratorResponse
 	// keywordResponseMap contains a map from the player commands that are understood to a slice of narratorResponses.
@@ -110,18 +125,16 @@ func (s *Scene) setSceneSwitchTrueInTime(duration time.Duration) {
 }
 
 func toggleMusic(streamer beep.StreamSeekCloser) {
-
 	speaker.Play(streamer)
-
 }
 
-func (s *Scene) applyShader(win *pixelgl.Window, start time.Time) {
+func (s *Scene) applyShader(win *pixelgl.Window) {
 	win.Canvas().SetUniform("uTime", &(s.uTime))
 	win.Canvas().SetUniform("uSpeed", &(s.uSpeed))
 	win.Canvas().SetFragmentShader(s.fragmentShader)
 }
 
-func (s *Scene) clearShader(win *pixelgl.Window, start time.Time) {
+func (s *Scene) clearShader(win *pixelgl.Window) {
 	win.Canvas().SetUniform("uTime", &(s.uTime))
 	win.Canvas().SetUniform("uSpeed", &(s.uSpeed))
 	win.Canvas().SetFragmentShader(s.passthroughShader)
@@ -152,61 +165,38 @@ func (s *Scene) initHintText() {
 	s.playerBoxHint.Color = colornames.Gray
 }
 
-// Init loads text and music into the Scene struct.
-func (s *Scene) Init() {
-	s.bgColor = colornames.Black
-	s.textColor = colornames.White
+func getSceneObjectWithDefaults() *Scene {
 
 	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
 	if err != nil {
 		panic(err)
 	}
 
-	s.atlas = text.NewAtlas(face, text.ASCII)
-	s.txt = &controltext.SafeText{
-		Text: text.New(pixel.ZV, s.atlas),
+	defaultScene := &Scene{
+		bgColor:   colornames.White,
+		textColor: colornames.Black,
+		atlas:     text.NewAtlas(face, text.ASCII),
+
+		trackMap: make(map[int]*effects.Volume),
+
+		fragmentShader: fileio.LoadFileToString("../assets/wavy_shader.glsl"),
+		//TODO: this shader does not do a true passthrough yet and only converts to grayscale
+		passthroughShader: fileio.LoadFileToString("../assets/passthrough_shader.glsl"),
+		uSpeed:            5.0,
+		isShaderApplied:   false,
+
+		progress: "beginning",
 	}
-	s.title = &controltext.SafeText{
-		Text: text.New(pixel.ZV, s.atlas),
-	}
-	s.footer = &controltext.SafeText{
-		Text: text.New(pixel.ZV, s.atlas),
-	}
-	s.initHintText()
 
-	s.trackMap = make(map[int]*effects.Volume)
+	defaultScene.initHintText()
 
-	s.fragmentShader = fileio.LoadFileToString("../assets/wavy_shader.glsl")
-	//TODO: this shader does not do a true passthrough yet and only converts to grayscale
-	s.passthroughShader = fileio.LoadFileToString("../assets/passthrough_shader.glsl")
-	s.uSpeed = 5.0
-	s.isShaderApplied = false
-
-	s.IsSceneSwitch = true
-
-	s.progress = "beginning"
+	return defaultScene
 }
 
-// InitWithFile initializes a scene using a scene script file which then should be parsed.
-func (s *Scene) InitWithFile(scriptFilepath string) {
-	s.Init()
-	s.script.file = fileio.LoadFileToString(scriptFilepath)
-}
-
-// TODO: redo backspace using the 'Repeating' event (see faiface/pixel Wiki for writing texts)
-// handleBackspace is necessary to implement manually as we currently "misuse" the text library in having one text
-// object holding all our text so it is currently replaced entirely though only one character should vanish.
 func handleBackspace(win *pixelgl.Window, player *Player) {
-	if win.JustPressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
+	if len(player.currentTextString) > 0 &&
+		(win.JustPressed(pixelgl.KeyBackspace) || win.Repeated(pixelgl.KeyBackspace)) {
 		player.setText(player.currentTextString[:len(player.currentTextString)-1])
-		backspaceCounter = int(-120 * 0.5) // Framerate times seconds to wait until continuous backspace kicks in.
-	} else if win.Pressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
-		backspaceCounter++
-		backspaceDeletionSpeed := int(120 / 40) // Framerate divided by deletions per second.
-		if backspaceCounter > 0 && backspaceCounter%backspaceDeletionSpeed == 0 {
-			player.setText(player.currentTextString[:len(player.currentTextString)-1])
-			backspaceCounter = 0
-		}
 	}
 }
 
@@ -223,20 +213,35 @@ func (s *Scene) updateHintTexts() {
 }
 
 // OnUpdate listens and processes player input on every frame update.
-func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
+func (s *Scene) OnUpdate(win *pixelgl.Window) {
 
-	if s.isPreventInput {
-		return gameState
+	switch CurrentScene {
+	case "MainMenu":
+		s.onUpdateMainMenu(win)
+		return
+	case `Demo`:
+		s.onUpdateDemo(win)
+		return
+	}
+
+	if s.isPreventInput.value {
+		if win.JustPressed(pixelgl.KeySpace) {
+			s.isImmediateReveal.Lock()
+			s.isImmediateReveal.value = true
+			s.isImmediateReveal.Unlock()
+		}
+		return
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 		win.SetClosed(true)
 	}
 	if win.JustPressed(pixelgl.KeyEscape) {
-		gameState = "mainMenu"
+		CurrentScene = "MainMenu"
 	}
 	handleBackspace(win, &player)
-	if win.JustPressed(pixelgl.KeyEnter) {
+	if win.JustPressed(pixelgl.KeyEnter) || (previousScene != CurrentScene) {
+		previousScene = CurrentScene
 		if len(s.script.responseQueue) == 0 && len(s.script.keywordResponseMap) == 0 {
 			s.parseScriptFile()
 		}
@@ -245,23 +250,31 @@ func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
 		s.updateHintTexts()
 	}
 
-	if len(win.Typed()) > 0 {
+	if len(s.script.responseQueue) == 0 && len(win.Typed()) > 0 {
 		player.addText(win.Typed(), s)
 	}
-
-	return gameState
 }
 
 // Draw draws background and text to the window.
-func (s *Scene) Draw(win *pixelgl.Window) {
+func (s *Scene) Draw(win *pixelgl.Window, start time.Time) {
+
+	switch CurrentScene {
+	case `MainMenu`:
+		s.drawMainMenu(win)
+		return
+	case `Demo`:
+		s.drawDemo(win, start)
+		return
+	case `Quit`:
+		return
+	}
 
 	// TODO: I currently see the scene configs as package variables inside their respective files
 	// but the struct initialization in main needs to support this.
-	s.bgColor = getBeachBackgroundColor()
+	s.bgColor = colornames.White
 	win.Clear(s.bgColor)
 	s.textColor = colornames.Black
 
-	s.title.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.title.Bounds().Center())).Moved(pixel.V(0, 300)))
 	s.narratorBoxHint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.narratorBoxHint.Bounds().Center())).Moved(
 		pixel.V(0, 2*s.narratorBoxHint.Bounds().H())))
 	s.playerBoxHint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.playerBoxHint.Bounds().Center())).Moved(

@@ -3,7 +3,7 @@
 package scene
 
 import (
-	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/3ter/iMagine/fileio"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
@@ -12,16 +12,46 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 )
 
-var (
-	//MainScene with the main menu
-	MainScene Scene
-)
+type mainMenuItem struct {
+	Text      string
+	sceneName string
+	State     string
+}
 
-func drawMainMenu(win *pixelgl.Window, atlasRegular, atlasBold *text.Atlas) {
-	MainScene.bgColor = colornames.Black
-	win.Clear(MainScene.bgColor)
+var menuItems = []*mainMenuItem{
+	{"Demo", "Demo", "selected"},
+	{"Start", "Beach", "unselected"},
+	{"Quit", "Quit", "unselected"},
+}
+
+func (s *Scene) initMainMenu() {
+	s.bgColor = colornames.Black
+	s.textColor = colornames.White
+}
+
+func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
+	menuTexts := make([]*text.Text, len(menuItems))
+	for i, menuItem := range menuItems {
+		txt := text.New(pixel.ZV, atlasRegular)
+		if menuItem.State == "selected" {
+			txt = text.New(pixel.ZV, atlasBold)
+		}
+		txt.WriteString(menuItem.Text)
+		menuTexts[i] = txt
+	}
+
+	return menuTexts
+}
+
+func (s *Scene) drawMainMenu(win *pixelgl.Window) {
+	win.Clear(s.bgColor)
 
 	menuTextVerticalOffset := 50 // pixels
+
+	regularFace := fileio.TtfFromBytesMust(goregular.TTF, 20)
+	boldFace := fileio.TtfFromBytesMust(gobold.TTF, 20)
+	atlasRegular := text.NewAtlas(regularFace, text.ASCII)
+	atlasBold := text.NewAtlas(boldFace, text.ASCII)
 
 	menuTexts := returnMenuTexts(atlasRegular, atlasBold)
 	for i, menuText := range menuTexts {
@@ -32,13 +62,7 @@ func drawMainMenu(win *pixelgl.Window, atlasRegular, atlasBold *text.Atlas) {
 }
 
 //HandleMainMenuAndReturnState handles menu items and the associated states
-func (s *Scene) HandleMainMenuAndReturnState(win *pixelgl.Window) string {
-
-	regularFace := fileio.TtfFromBytesMust(goregular.TTF, 20)
-	boldFace := fileio.TtfFromBytesMust(gobold.TTF, 20)
-	atlasRegular := text.NewAtlas(regularFace, text.ASCII)
-	atlasBold := text.NewAtlas(boldFace, text.ASCII)
-	drawMainMenu(win, atlasRegular, atlasBold)
+func (s *Scene) onUpdateMainMenu(win *pixelgl.Window) {
 
 	if win.JustPressed(pixelgl.KeyDown) {
 		for i, menuItem := range menuItems {
@@ -62,35 +86,8 @@ func (s *Scene) HandleMainMenuAndReturnState(win *pixelgl.Window) string {
 	if win.JustPressed(pixelgl.KeyEnter) {
 		for _, menuItem := range menuItems {
 			if menuItem.State == "selected" {
-				return menuItem.Text
+				CurrentScene = menuItem.sceneName
 			}
 		}
 	}
-
-	return "mainMenu"
-}
-
-type mainMenuItem struct {
-	Text  string
-	State string
-}
-
-var menuItems = []*mainMenuItem{
-	&mainMenuItem{"Demo", "selected"},
-	&mainMenuItem{"Start", "unselected"},
-	&mainMenuItem{"Forest", "unselected"},
-	&mainMenuItem{"Quit", "unselected"}}
-
-func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
-	menuTexts := make([]*text.Text, len(menuItems))
-	for i, menuItem := range menuItems {
-		txt := text.New(pixel.ZV, atlasRegular)
-		if menuItem.State == "selected" {
-			txt = text.New(pixel.ZV, atlasBold)
-		}
-		txt.WriteString(menuItem.Text)
-		menuTexts[i] = txt
-	}
-
-	return menuTexts
 }

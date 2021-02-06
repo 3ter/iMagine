@@ -12,7 +12,7 @@ import (
 	"golang.org/x/image/colornames"
 	"golang.org/x/image/font"
 
-	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/3ter/iMagine/fileio"
 )
 
 // Player is defined by its text and contains the game progression in
@@ -80,6 +80,11 @@ func (p *Player) getWrappedString(str string) string {
 		} else {
 			wrappedString += currLine[:newLineBreakIndex] + "\n" + currLine[newLineBreakIndex+1:]
 		}
+	}
+
+	matchOnlyWhitespaceString := regexp.MustCompile(`^\s+$`)
+	if matchOnlyWhitespaceString.MatchString(wrappedString) {
+		wrappedString = ""
 	}
 
 	return wrappedString
