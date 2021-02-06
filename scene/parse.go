@@ -149,6 +149,8 @@ func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
 			narrator.setTextLetterByLetter("You can't go to "+object+"!", s)
 			return
 		}
+		// To allow parsing of the newly selected current script file (see 'scene.OnUpdate')
+		s.script.keywordResponseMap = nil
 		CurrentScene = object
 	}
 }
@@ -216,6 +218,7 @@ func (s *Scene) parseScriptFile() {
 			s.script.responseQueue = append(s.script.responseQueue, response)
 		}
 
+		// break loop if the first player keyword is found and gobble up the rest of the lines
 		keywordResponseMap := getKeywordResponseMap(scriptLine, lineNumber, activeScriptSlice)
 		if len(keywordResponseMap) > 0 {
 			s.script.keywordResponseMap = keywordResponseMap

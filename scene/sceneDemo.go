@@ -24,10 +24,13 @@ var (
 	isMusicPlaying = false
 )
 
-// InitDemoScene loads all assets for the scene
-func (s *Scene) InitDemoScene() {
+// initDemo loads all demo specific assets for the scene
+func (s *Scene) initDemo() {
 
 	s.IsSceneSwitch = true
+
+	s.bgColor = colornames.Black
+	s.textColor = colornames.Wheat
 
 	s.txt = &controltext.SafeText{
 		Text: text.New(pixel.ZV, s.atlas),

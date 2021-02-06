@@ -173,8 +173,8 @@ func getSceneObjectWithDefaults() *Scene {
 	}
 
 	defaultScene := &Scene{
-		bgColor:   colornames.Black,
-		textColor: colornames.White,
+		bgColor:   colornames.White,
+		textColor: colornames.Black,
 		atlas:     text.NewAtlas(face, text.ASCII),
 
 		trackMap: make(map[int]*effects.Volume),
@@ -224,8 +224,6 @@ func (s *Scene) OnUpdate(win *pixelgl.Window) {
 		return
 	}
 
-	previousScene = CurrentScene
-
 	if s.isPreventInput.value {
 		if win.JustPressed(pixelgl.KeySpace) {
 			s.isImmediateReveal.Lock()
@@ -242,7 +240,8 @@ func (s *Scene) OnUpdate(win *pixelgl.Window) {
 		CurrentScene = "MainMenu"
 	}
 	handleBackspace(win, &player)
-	if win.JustPressed(pixelgl.KeyEnter) {
+	if win.JustPressed(pixelgl.KeyEnter) || (previousScene != CurrentScene) {
+		previousScene = CurrentScene
 		if len(s.script.responseQueue) == 0 && len(s.script.keywordResponseMap) == 0 {
 			s.parseScriptFile()
 		}

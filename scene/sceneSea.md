@@ -1,4 +1,9 @@
 # beginning
-`[Audio: Celeste.ogg]`
+`[Audio: Celesta.ogg]`
 
 Beginning of the sea scene.
+
+`(End)`
+
+End of the Sea scene.
+

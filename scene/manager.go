@@ -72,7 +72,9 @@ func LoadFilesToSceneMap() {
 				ScenesMap[fileScene] = getSceneObjectWithDefaults()
 				ScenesMap[fileScene].Name = fileScene
 				if fileScene == `Demo` {
-					ScenesMap[`Demo`].InitDemoScene()
+					ScenesMap[`Demo`].initDemo()
+				} else if fileScene == `MainMenu` {
+					ScenesMap[`MainMenu`].initMainMenu()
 				}
 			}
 

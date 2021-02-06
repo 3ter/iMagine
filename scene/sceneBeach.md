@@ -46,3 +46,6 @@ You leave the sand on the ground and reach grass. A lighthouse is built here. Yo
 You enter the lighthouse. The door was not locked. The inside looks abandoned, as if the last time a human inhabited this room was over a decade ago.
 
 `(End)`
+
+End of the Beach scene.
+

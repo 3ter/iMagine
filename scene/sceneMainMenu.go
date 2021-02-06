@@ -24,6 +24,11 @@ var menuItems = []*mainMenuItem{
 	{"Quit", "Quit", "unselected"},
 }
 
+func (s *Scene) initMainMenu() {
+	s.bgColor = colornames.Black
+	s.textColor = colornames.White
+}
+
 func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
 	menuTexts := make([]*text.Text, len(menuItems))
 	for i, menuItem := range menuItems {
@@ -39,7 +44,6 @@ func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
 }
 
 func (s *Scene) drawMainMenu(win *pixelgl.Window) {
-	s.bgColor = colornames.Black
 	win.Clear(s.bgColor)
 
 	menuTextVerticalOffset := 50 // pixels
