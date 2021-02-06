@@ -184,7 +184,7 @@ func (s *Scene) handlePlayerCommand(playerInput string) {
 //
 // If the scene modifications are still to be fed from the 'responseQueue' the function returns without checking player
 // input.
-// The check for progress change provides a way to jump from sectino within a scene script.
+// The check for progress change provides a way to jump from section within a scene script.
 func (s *Scene) executeScriptFromQueue() {
 
 	if len(s.script.responseQueue) > 0 {

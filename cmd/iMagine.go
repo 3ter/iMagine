@@ -8,7 +8,7 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 
-	// import package purely for its initialization side effects.
+	// import packages purely for their initialization side effects.
 	// see https://golang.org/pkg/image
 	_ "image/jpeg"
 	_ "image/png"
