@@ -82,6 +82,11 @@ func (p *Player) getWrappedString(str string) string {
 		}
 	}
 
+	matchOnlyWhitespaceString := regexp.MustCompile(`^\s+$`)
+	if matchOnlyWhitespaceString.MatchString(wrappedString) {
+		wrappedString = ""
+	}
+
 	return wrappedString
 }
 

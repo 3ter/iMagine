@@ -1,4 +1,6 @@
 # beginning
 `[Audio: Choir.ogg]`
 
-Beginning of the mountian scene.
+Beginning of the mountain scene.
+
+`(End)`

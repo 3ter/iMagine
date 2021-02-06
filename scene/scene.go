@@ -4,6 +4,7 @@ package scene
 
 import (
 	"image/color"
+	"sync"
 	"time"
 
 	"golang.org/x/image/colornames"
@@ -33,6 +34,11 @@ var player Player
 var narrator Narrator
 var window *pixelgl.Window
 
+type threadSafeBool struct {
+	value bool
+	sync.Mutex
+}
+
 // Scene contains basic settings and assets (font, music, shaders, content)
 type Scene struct {
 	// Name is the scene identifier which is used in 'OnUpdate' to determine the functions to call
@@ -56,9 +62,10 @@ type Scene struct {
 	playerBoxHint   *controltext.SafeText
 	typed           string
 
-	trackMap       map[int]*effects.Volume
-	IsSceneSwitch  bool
-	isPreventInput bool
+	trackMap          map[int]*effects.Volume
+	IsSceneSwitch     bool
+	isPreventInput    threadSafeBool
+	isImmediateReveal threadSafeBool
 
 	script        Script
 	progress      string
@@ -219,7 +226,12 @@ func (s *Scene) OnUpdate(win *pixelgl.Window) {
 
 	previousScene = CurrentScene
 
-	if s.isPreventInput {
+	if s.isPreventInput.value {
+		if win.JustPressed(pixelgl.KeySpace) {
+			s.isImmediateReveal.Lock()
+			s.isImmediateReveal.value = true
+			s.isImmediateReveal.Unlock()
+		}
 		return
 	}
 
@@ -239,7 +251,7 @@ func (s *Scene) OnUpdate(win *pixelgl.Window) {
 		s.updateHintTexts()
 	}
 
-	if len(win.Typed()) > 0 {
+	if len(s.script.responseQueue) == 0 && len(win.Typed()) > 0 {
 		player.addText(win.Typed(), s)
 	}
 }

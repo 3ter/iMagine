@@ -21,7 +21,7 @@ func gameloop(win *pixelgl.Window) {
 	scene.SetWindowForAllScenes(win)
 
 	scene.LoadFilesToSceneMap()
-	scene.CurrentScene = `Beach`
+	scene.CurrentScene = `Beach` //	 FIXME: Change to `MainMenu`
 
 	for !win.Closed() {
 

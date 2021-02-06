@@ -133,15 +133,50 @@ func executeAmbienceCommands(ambienceCmdSlice []string) {
 	}
 }
 
-func handleSpecialPlayerCommands(playerCommandString string) {
-	playerWords := strings.Split(playerCommandString, ` `)
+func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
+
 	// TODO: Implement the 'go' verb first to visit other maps
 	// This entails the handling of the script progress and queues!
-	playerVerb := playerWords[0]
-	switch playerVerb {
+	if len(playerWords) < 2 {
+		narrator.setTextLetterByLetter("Specify your command in the format: '[verb] [object]'", s)
+		return
+	}
+	verb := playerWords[0]
+	object := playerWords[1]
+	switch verb {
 	case `go`:
-		// TODO: I'm pretty sure I need to change the 'currentScene' here... this needs to be in another global variable
-		// here. It needs to go from 'main' to 'scene'!
+		if ScenesMap[object] == nil {
+			narrator.setTextLetterByLetter("You can't go to "+object+"!", s)
+			return
+		}
+		CurrentScene = object
+	}
+}
+
+func (s *Scene) handlePlayerCommand(playerInput string) {
+
+	playerWords := strings.Split(playerInput, ` `)
+
+	if len(playerWords[0]) > 0 && playerWords[0] == `go` {
+		s.handleSpecialPlayerCommands(playerWords)
+		return
+	}
+
+	// Check for progress change
+	for keyword, responseSlice := range s.script.keywordResponseMap {
+		if strings.ToLower(playerInput) == strings.ToLower(keyword) {
+			// If there's a progressUpdate then there's only one response in the slice
+			if responseSlice[0].progressUpdate != "" {
+				s.progress = responseSlice[0].progressUpdate
+				// Empty keywordResponseMap to prepare for jump to new script section.
+				s.script.keywordResponseMap = map[string][]narratorResponse{}
+				s.parseScriptFile()
+				s.executeScriptFromQueue()
+			} else {
+				executeAmbienceCommands(s.script.keywordResponseMap[keyword][0].ambienceCmdSlice)
+				narrator.setTextLetterByLetter(s.script.keywordResponseMap[keyword][0].narratorTextLine, s)
+			}
+		}
 	}
 }
 
@@ -163,27 +198,10 @@ func (s *Scene) executeScriptFromQueue() {
 		return
 	}
 
-	playerProvidedKeyword := player.currentTextString
+	playerInput := player.currentTextString
 	player.setText("")
 
-	handleSpecialPlayerCommands(playerProvidedKeyword)
-
-	// Check for progress change
-	for keyword, responseSlice := range s.script.keywordResponseMap {
-		if strings.ToLower(playerProvidedKeyword) == strings.ToLower(keyword) {
-			// If there's a progressUpdate then there's only one response in the slice
-			if responseSlice[0].progressUpdate != "" {
-				s.progress = responseSlice[0].progressUpdate
-				// Empty keywordResponseMap to prepare for jump to new script section.
-				s.script.keywordResponseMap = map[string][]narratorResponse{}
-				s.parseScriptFile()
-				s.executeScriptFromQueue()
-			} else {
-				executeAmbienceCommands(s.script.keywordResponseMap[keyword][0].ambienceCmdSlice)
-				narrator.setTextLetterByLetter(s.script.keywordResponseMap[keyword][0].narratorTextLine, s)
-			}
-		}
-	}
+	s.handlePlayerCommand(playerInput)
 }
 
 func (s *Scene) parseScriptFile() {
