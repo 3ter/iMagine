@@ -14,23 +14,11 @@ import (
 	_ "image/png"
 )
 
-var (
-	gameState     = "mainMenu"
-	prevGameState = ""
-)
-
 func gameloop(win *pixelgl.Window) {
 	fps := time.Tick(time.Second / 120) // 120 FPS provide a very smooth typing experience
 	start := time.Now()
 
 	scene.SetWindowForAllScenes(win)
-
-	// TODO: Remove old way to change scenes
-	var demoScene = scene.DemoScene
-	var mainScene = scene.MainScene
-	demoScene.Init()
-	demoScene.InitDemoScene()
-	mainScene.Init()
 
 	scene.LoadFilesToSceneMap()
 	scene.CurrentScene = `Beach`
@@ -42,19 +30,9 @@ func gameloop(win *pixelgl.Window) {
 		case "Quit":
 			win.SetClosed(true)
 
-		case "mainMenu":
-			prevGameState = gameState
-			gameState = mainScene.HandleMainMenuAndReturnState(win)
-
-		case "Demo":
-			prevGameState = gameState
-			gameState = demoScene.HandleDemoInput(win, start)
-			demoScene.DrawDemoScene(win, start)
-			demoScene.IsSceneSwitch = (gameState != prevGameState)
-
 		default:
-			gameState = scene.ScenesMap[scene.CurrentScene].OnUpdate(win, gameState)
-			scene.ScenesMap[scene.CurrentScene].Draw(win)
+			scene.ScenesMap[scene.CurrentScene].OnUpdate(win)
+			scene.ScenesMap[scene.CurrentScene].Draw(win, start)
 		}
 
 		win.Update()

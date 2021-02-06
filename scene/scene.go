@@ -118,18 +118,16 @@ func (s *Scene) setSceneSwitchTrueInTime(duration time.Duration) {
 }
 
 func toggleMusic(streamer beep.StreamSeekCloser) {
-
 	speaker.Play(streamer)
-
 }
 
-func (s *Scene) applyShader(win *pixelgl.Window, start time.Time) {
+func (s *Scene) applyShader(win *pixelgl.Window) {
 	win.Canvas().SetUniform("uTime", &(s.uTime))
 	win.Canvas().SetUniform("uSpeed", &(s.uSpeed))
 	win.Canvas().SetFragmentShader(s.fragmentShader)
 }
 
-func (s *Scene) clearShader(win *pixelgl.Window, start time.Time) {
+func (s *Scene) clearShader(win *pixelgl.Window) {
 	win.Canvas().SetUniform("uTime", &(s.uTime))
 	win.Canvas().SetUniform("uSpeed", &(s.uSpeed))
 	win.Canvas().SetFragmentShader(s.passthroughShader)
@@ -158,48 +156,6 @@ func (s *Scene) initHintText() {
 		Text: text.New(pixel.ZV, atlas),
 	}
 	s.playerBoxHint.Color = colornames.Gray
-}
-
-// Init loads text and music into the Scene struct.
-// TODO: See below function for getting a scene with default values
-func (s *Scene) Init() {
-	s.bgColor = colornames.Black
-	s.textColor = colornames.White
-
-	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
-	if err != nil {
-		panic(err)
-	}
-
-	s.atlas = text.NewAtlas(face, text.ASCII)
-	s.txt = &controltext.SafeText{
-		Text: text.New(pixel.ZV, s.atlas),
-	}
-	s.title = &controltext.SafeText{
-		Text: text.New(pixel.ZV, s.atlas),
-	}
-	s.footer = &controltext.SafeText{
-		Text: text.New(pixel.ZV, s.atlas),
-	}
-	s.initHintText()
-
-	s.trackMap = make(map[int]*effects.Volume)
-
-	s.fragmentShader = fileio.LoadFileToString("../assets/wavy_shader.glsl")
-	//TODO: this shader does not do a true passthrough yet and only converts to grayscale
-	s.passthroughShader = fileio.LoadFileToString("../assets/passthrough_shader.glsl")
-	s.uSpeed = 5.0
-	s.isShaderApplied = false
-
-	s.IsSceneSwitch = true
-
-	s.progress = "beginning"
-}
-
-// InitWithFile initializes a scene using a scene script file which then should be parsed.
-func (s *Scene) InitWithFile(scriptFilepath string) {
-	s.Init()
-	s.script.fileContent = fileio.LoadFileToString(scriptFilepath)
 }
 
 func getSceneObjectWithDefaults() *Scene {
@@ -250,16 +206,28 @@ func (s *Scene) updateHintTexts() {
 }
 
 // OnUpdate listens and processes player input on every frame update.
-func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
+func (s *Scene) OnUpdate(win *pixelgl.Window) {
+
+	switch CurrentScene {
+	case "MainMenu":
+		s.onUpdateMainMenu(win)
+		return
+	case `Demo`:
+		s.onUpdateDemo(win)
+		return
+	}
+
+	previousScene = CurrentScene
+
 	if s.isPreventInput {
-		return gameState
+		return
 	}
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 		win.SetClosed(true)
 	}
 	if win.JustPressed(pixelgl.KeyEscape) {
-		gameState = "mainMenu"
+		CurrentScene = "MainMenu"
 	}
 	handleBackspace(win, &player)
 	if win.JustPressed(pixelgl.KeyEnter) {
@@ -274,12 +242,21 @@ func (s *Scene) OnUpdate(win *pixelgl.Window, gameState string) string {
 	if len(win.Typed()) > 0 {
 		player.addText(win.Typed(), s)
 	}
-
-	return gameState
 }
 
 // Draw draws background and text to the window.
-func (s *Scene) Draw(win *pixelgl.Window) {
+func (s *Scene) Draw(win *pixelgl.Window, start time.Time) {
+
+	switch CurrentScene {
+	case `MainMenu`:
+		s.drawMainMenu(win)
+		return
+	case `Demo`:
+		s.drawDemo(win, start)
+		return
+	case `Quit`:
+		return
+	}
 
 	// TODO: I currently see the scene configs as package variables inside their respective files
 	// but the struct initialization in main needs to support this.
