@@ -17,7 +17,6 @@ import (
 var (
 	gameState     = "mainMenu"
 	prevGameState = ""
-	currentScene  = `Beach`
 )
 
 func gameloop(win *pixelgl.Window) {
@@ -26,19 +25,19 @@ func gameloop(win *pixelgl.Window) {
 
 	scene.SetWindowForAllScenes(win)
 
+	// TODO: Remove old way to change scenes
 	var demoScene = scene.DemoScene
-	var beachScene = scene.BeachScene
 	var mainScene = scene.MainScene
 	demoScene.Init()
 	demoScene.InitDemoScene()
-	beachScene.InitWithFile(`../scene/sceneBeach.md`)
 	mainScene.Init()
 
 	scene.LoadFilesToSceneMap()
+	scene.CurrentScene = `Beach`
 
 	for !win.Closed() {
 
-		switch gameState {
+		switch scene.CurrentScene {
 
 		case "Quit":
 			win.SetClosed(true)
@@ -47,15 +46,15 @@ func gameloop(win *pixelgl.Window) {
 			prevGameState = gameState
 			gameState = mainScene.HandleMainMenuAndReturnState(win)
 
-		case "Start":
-			gameState = scene.ScenesMap[currentScene].OnUpdate(win, gameState)
-			scene.ScenesMap[currentScene].Draw(win)
-
 		case "Demo":
 			prevGameState = gameState
 			gameState = demoScene.HandleDemoInput(win, start)
 			demoScene.DrawDemoScene(win, start)
 			demoScene.IsSceneSwitch = (gameState != prevGameState)
+
+		default:
+			gameState = scene.ScenesMap[scene.CurrentScene].OnUpdate(win, gameState)
+			scene.ScenesMap[scene.CurrentScene].Draw(win)
 		}
 
 		win.Update()

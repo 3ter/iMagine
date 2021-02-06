@@ -18,6 +18,9 @@ const ScenesDir = `../scene/`
 // ScenesMap maps scene identifiers (e.g. 'Beach') to their respective scene object
 var ScenesMap map[string]*Scene
 
+// CurrentScene holds the game's state, which can be a scene name like 'Beach' or a state like 'Quit' or 'Pause'.
+var CurrentScene string
+
 // MapConfig contains key/value-pairs for a scene that are intended to save
 // * which scenes are adjacent to the current one
 // * the state of the scene
@@ -54,6 +57,7 @@ func LoadFilesToSceneMap() {
 
 			if ScenesMap[fileScene] == nil {
 				ScenesMap[fileScene] = getSceneObjectWithDefaults()
+				ScenesMap[fileScene].Name = fileScene
 			}
 
 			if fileExtension == `md` {

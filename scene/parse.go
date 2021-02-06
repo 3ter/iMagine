@@ -137,7 +137,12 @@ func handleSpecialPlayerCommands(playerCommandString string) {
 	playerWords := strings.Split(playerCommandString, ` `)
 	// TODO: Implement the 'go' verb first to visit other maps
 	// This entails the handling of the script progress and queues!
-	_ = playerWords
+	playerVerb := playerWords[0]
+	switch playerVerb {
+	case `go`:
+		// TODO: I'm pretty sure I need to change the 'currentScene' here... this needs to be in another global variable
+		// here. It needs to go from 'main' to 'scene'!
+	}
 }
 
 // executeScriptFromQueue modfies the scene according to scene script and player input.

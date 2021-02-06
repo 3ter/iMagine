@@ -35,6 +35,9 @@ var window *pixelgl.Window
 
 // Scene contains basic settings and assets (font, music, shaders, content)
 type Scene struct {
+	// Name is the scene identifier which is used in 'OnUpdate' to determine the functions to call
+	Name string
+
 	bgColor           color.RGBA //= colornames.Black
 	fragmentShader    string     // =fileio.LoadFileToString("../assets/wavy_shader.glsl")
 	passthroughShader string
@@ -227,20 +230,10 @@ func getSceneObjectWithDefaults() *Scene {
 	return defaultScene
 }
 
-// TODO: redo backspace using the 'Repeating' event (see faiface/pixel Wiki for writing texts)
-// handleBackspace is necessary to implement manually as we currently "misuse" the text library in having one text
-// object holding all our text so it is currently replaced entirely though only one character should vanish.
 func handleBackspace(win *pixelgl.Window, player *Player) {
-	if win.JustPressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
+	if len(player.currentTextString) > 0 &&
+		(win.JustPressed(pixelgl.KeyBackspace) || win.Repeated(pixelgl.KeyBackspace)) {
 		player.setText(player.currentTextString[:len(player.currentTextString)-1])
-		backspaceCounter = int(-120 * 0.5) // Framerate times seconds to wait until continuous backspace kicks in.
-	} else if win.Pressed(pixelgl.KeyBackspace) && len(player.currentTextString) > 0 {
-		backspaceCounter++
-		backspaceDeletionSpeed := int(120 / 40) // Framerate divided by deletions per second.
-		if backspaceCounter > 0 && backspaceCounter%backspaceDeletionSpeed == 0 {
-			player.setText(player.currentTextString[:len(player.currentTextString)-1])
-			backspaceCounter = 0
-		}
 	}
 }
 
@@ -290,7 +283,7 @@ func (s *Scene) Draw(win *pixelgl.Window) {
 
 	// TODO: I currently see the scene configs as package variables inside their respective files
 	// but the struct initialization in main needs to support this.
-	s.bgColor = getBeachBackgroundColor()
+	s.bgColor = colornames.White
 	win.Clear(s.bgColor)
 	s.textColor = colornames.Black
 

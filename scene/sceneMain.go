@@ -17,6 +17,32 @@ var (
 	MainScene Scene
 )
 
+type mainMenuItem struct {
+	Text  string
+	State string
+}
+
+var menuItems = []*mainMenuItem{
+	{"Demo", "selected"},
+	{"Start", "unselected"},
+	{"Forest", "unselected"},
+	{"Quit", "unselected"},
+}
+
+func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
+	menuTexts := make([]*text.Text, len(menuItems))
+	for i, menuItem := range menuItems {
+		txt := text.New(pixel.ZV, atlasRegular)
+		if menuItem.State == "selected" {
+			txt = text.New(pixel.ZV, atlasBold)
+		}
+		txt.WriteString(menuItem.Text)
+		menuTexts[i] = txt
+	}
+
+	return menuTexts
+}
+
 func drawMainMenu(win *pixelgl.Window, atlasRegular, atlasBold *text.Atlas) {
 	MainScene.bgColor = colornames.Black
 	win.Clear(MainScene.bgColor)
@@ -68,30 +94,4 @@ func (s *Scene) HandleMainMenuAndReturnState(win *pixelgl.Window) string {
 	}
 
 	return "mainMenu"
-}
-
-type mainMenuItem struct {
-	Text  string
-	State string
-}
-
-var menuItems = []*mainMenuItem{
-	{"Demo", "selected"},
-	{"Start", "unselected"},
-	{"Forest", "unselected"},
-	{"Quit", "unselected"},
-}
-
-func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
-	menuTexts := make([]*text.Text, len(menuItems))
-	for i, menuItem := range menuItems {
-		txt := text.New(pixel.ZV, atlasRegular)
-		if menuItem.State == "selected" {
-			txt = text.New(pixel.ZV, atlasBold)
-		}
-		txt.WriteString(menuItem.Text)
-		menuTexts[i] = txt
-	}
-
-	return menuTexts
 }
