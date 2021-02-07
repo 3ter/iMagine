@@ -154,9 +154,9 @@ func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
 	}
 	verb := strings.ToLower(playerWords[0])
 	object := strings.ToLower(playerWords[1])
+	sceneName := translateDirectionToSceneName(object)
 	switch verb {
 	case `go`:
-		sceneName := translateDirectionToSceneName(object)
 		if GlobalScenes[sceneName] == nil || sceneName == `Void` {
 			globalNarrator.setTextLetterByLetter("You can't go to '"+sceneName+"'! (Enter a direction: e.g. North)", s)
 			return
@@ -165,8 +165,16 @@ func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
 		s.script.keywordResponseMap = nil
 		GlobalCurrentScene = sceneName
 	case `look`:
-		sceneName := translateDirectionToSceneName(object)
-		globalNarrator.setTextLetterByLetter(GlobalScenes[sceneName].mapConfig.Look, s)
+		if sceneName == `around` {
+			var lookMessages []string
+			for direction, sceneInDirection := range GlobalScenes[GlobalCurrentScene].mapConfig.Directions {
+				lookMessages = append(lookMessages,
+					direction+": "+GlobalScenes[sceneInDirection].mapConfig.Look)
+			}
+			globalNarrator.setTextLetterByLetter(strings.Join(lookMessages, "\n"), s)
+		} else {
+			globalNarrator.setTextLetterByLetter(GlobalScenes[sceneName].mapConfig.Look, s)
+		}
 	}
 }
 
