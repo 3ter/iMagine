@@ -21,18 +21,18 @@ func gameloop(win *pixelgl.Window) {
 	scene.SetWindowForAllScenes(win)
 
 	scene.LoadFilesToSceneMap()
-	scene.CurrentScene = `MainMenu`
+	scene.GlobalCurrentScene = `MainMenu`
 
 	for !win.Closed() {
 
-		switch scene.CurrentScene {
+		switch scene.GlobalCurrentScene {
 
 		case "Quit":
 			win.SetClosed(true)
 
 		default:
-			scene.ScenesMap[scene.CurrentScene].OnUpdate(win)
-			scene.ScenesMap[scene.CurrentScene].Draw(win, start)
+			scene.GlobalScenes[scene.GlobalCurrentScene].OnUpdate(win)
+			scene.GlobalScenes[scene.GlobalCurrentScene].Draw(win, start)
 		}
 
 		win.Update()

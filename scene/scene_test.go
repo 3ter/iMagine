@@ -6,11 +6,11 @@ import (
 
 func TestLoadFilesToSceneMap(t *testing.T) {
 	LoadFilesToSceneMap()
-	if len(ScenesMap) == 0 {
-		t.Errorf("scenesMap is empty")
+	if len(GlobalScenes) == 0 {
+		t.Errorf("GlobalScenes is empty")
 	}
-	for sceneName, sceneObj := range ScenesMap {
-		if sceneName == `Void` {
+	for sceneName, sceneObj := range GlobalScenes {
+		if sceneName == `Void` || sceneName == `Demo` || sceneName == `MainMenu` {
 			continue
 		}
 		if len(sceneObj.mapConfigPath) == 0 {
@@ -18,6 +18,12 @@ func TestLoadFilesToSceneMap(t *testing.T) {
 		}
 		if len(sceneObj.script.filePath) == 0 {
 			t.Errorf("The scene '" + sceneName + "' has no filePath")
+		}
+
+		directions := sceneObj.mapConfig.Directions
+		_, directionsHasNorth := directions[`north`]
+		if sceneObj.mapConfig != nil && !directionsHasNorth {
+			t.Errorf("The scene '" + sceneName + "' has no valid direction for 'north'")
 		}
 	}
 }

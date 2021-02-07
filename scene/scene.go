@@ -30,9 +30,9 @@ import (
 	"github.com/3ter/iMagine/fileio"
 )
 
-var player Player
-var narrator Narrator
-var window *pixelgl.Window
+var globalPlayer Player
+var globalNarrator Narrator
+var globalWindow *pixelgl.Window
 
 type threadSafeBool struct {
 	value bool
@@ -70,7 +70,7 @@ type Scene struct {
 	script        Script
 	progress      string
 	mapConfigPath string
-	mapConfig     MapConfig
+	mapConfig     *MapConfig
 }
 
 // Script groups all info from the (markdown) script to make it available to functions within a scene
@@ -93,13 +93,13 @@ type narratorResponse struct {
 
 // This is called once when the package is imported for the first time
 func init() {
-	player.setDefaultAttributes()
-	narrator.setDefaultAttributes()
+	globalPlayer.setDefaultAttributes()
+	globalNarrator.setDefaultAttributes()
 }
 
 // SetWindowForAllScenes initializes the global window variable for all scenes
 func SetWindowForAllScenes(win *pixelgl.Window) {
-	window = win
+	globalWindow = win
 }
 
 func convertTextToRGB(txt string) [3]uint8 {
@@ -193,10 +193,10 @@ func getSceneObjectWithDefaults() *Scene {
 	return defaultScene
 }
 
-func handleBackspace(win *pixelgl.Window, player *Player) {
-	if len(player.currentTextString) > 0 &&
+func handleBackspace(win *pixelgl.Window) {
+	if len(globalPlayer.currentTextString) > 0 &&
 		(win.JustPressed(pixelgl.KeyBackspace) || win.Repeated(pixelgl.KeyBackspace)) {
-		player.setText(player.currentTextString[:len(player.currentTextString)-1])
+		globalPlayer.setText(globalPlayer.currentTextString[:len(globalPlayer.currentTextString)-1])
 	}
 }
 
@@ -215,7 +215,7 @@ func (s *Scene) updateHintTexts() {
 // OnUpdate listens and processes player input on every frame update.
 func (s *Scene) OnUpdate(win *pixelgl.Window) {
 
-	switch CurrentScene {
+	switch GlobalCurrentScene {
 	case "MainMenu":
 		s.onUpdateMainMenu(win)
 		return
@@ -237,11 +237,11 @@ func (s *Scene) OnUpdate(win *pixelgl.Window) {
 		win.SetClosed(true)
 	}
 	if win.JustPressed(pixelgl.KeyEscape) {
-		CurrentScene = "MainMenu"
+		GlobalCurrentScene = "MainMenu"
 	}
-	handleBackspace(win, &player)
-	if win.JustPressed(pixelgl.KeyEnter) || (previousScene != CurrentScene) {
-		previousScene = CurrentScene
+	handleBackspace(win)
+	if win.JustPressed(pixelgl.KeyEnter) || (globalPreviousScene != GlobalCurrentScene) {
+		globalPreviousScene = GlobalCurrentScene
 		if len(s.script.responseQueue) == 0 && len(s.script.keywordResponseMap) == 0 {
 			s.parseScriptFile()
 		}
@@ -251,14 +251,14 @@ func (s *Scene) OnUpdate(win *pixelgl.Window) {
 	}
 
 	if len(s.script.responseQueue) == 0 && len(win.Typed()) > 0 {
-		player.addText(win.Typed(), s)
+		globalPlayer.addText(win.Typed(), s)
 	}
 }
 
 // Draw draws background and text to the window.
 func (s *Scene) Draw(win *pixelgl.Window, start time.Time) {
 
-	switch CurrentScene {
+	switch GlobalCurrentScene {
 	case `MainMenu`:
 		s.drawMainMenu(win)
 		return
@@ -280,6 +280,6 @@ func (s *Scene) Draw(win *pixelgl.Window, start time.Time) {
 	s.playerBoxHint.Draw(win, pixel.IM.Moved(win.Bounds().Center().Sub(s.playerBoxHint.Bounds().Center())).Moved(
 		pixel.V(0, -5.5*s.playerBoxHint.Bounds().H())))
 
-	player.drawTextInBox(win)
-	narrator.drawTextInBox(win)
+	globalPlayer.drawTextInBox(win)
+	globalNarrator.drawTextInBox(win)
 }

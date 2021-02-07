@@ -183,9 +183,9 @@ func (n *Narrator) convertMarkdownStringToTextObjectsInBox(str string, scn *Scen
 
 		char := string(rune)
 		switch char {
-		case `\n`:
+		case "\n":
 			// align at left indent and remove one line height to the current Y Position
-			currentOrig = currentOrig.Add(pixel.V(leftIndent-currentOrig.X, -n.currentTextObjects[idx].LineHeight))
+			currentOrig = currentOrig.Add(pixel.V(leftIndent-currentOrig.X, -n.currentTextObjects[idx-1].LineHeight))
 		case ` `:
 			nextWord = nextWordRegexp.FindString(str[(idx + 1):])
 		}

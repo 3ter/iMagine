@@ -133,25 +133,48 @@ func executeAmbienceCommands(ambienceCmdSlice []string) {
 	}
 }
 
+// translateDirectionToSceneName uses the Directions map from mapConfig to return the sceneName
+//
+// It defaults back to returning the original string in case there was no direction matching the string
+// e.g. Directions[`foobar`] -> no direction with foobar so print out foobar's  not a valid direction
+func translateDirectionToSceneName(direction string) string {
+
+	sceneName := GlobalScenes[GlobalCurrentScene].mapConfig.Directions[direction]
+	if sceneName == `` {
+		return direction
+	}
+	return sceneName
+}
+
 func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
 
-	// TODO: Implement the 'go' verb first to visit other maps
-	// This entails the handling of the script progress and queues!
 	if len(playerWords) < 2 {
-		narrator.setTextLetterByLetter("Specify your command in the format: '[verb] [object]'", s)
+		globalNarrator.setTextLetterByLetter("Specify your command in the format: '[verb] [object]'", s)
 		return
 	}
-	verb := playerWords[0]
-	object := playerWords[1]
+	verb := strings.ToLower(playerWords[0])
+	object := strings.ToLower(playerWords[1])
+	sceneName := translateDirectionToSceneName(object)
 	switch verb {
 	case `go`:
-		if ScenesMap[object] == nil {
-			narrator.setTextLetterByLetter("You can't go to "+object+"!", s)
+		if GlobalScenes[sceneName] == nil || sceneName == `Void` {
+			globalNarrator.setTextLetterByLetter("You can't go to '"+sceneName+"'! (Enter a direction: e.g. North)", s)
 			return
 		}
 		// To allow parsing of the newly selected current script file (see 'scene.OnUpdate')
 		s.script.keywordResponseMap = nil
-		CurrentScene = object
+		GlobalCurrentScene = sceneName
+	case `look`:
+		if sceneName == `around` {
+			var lookMessages []string
+			for direction, sceneInDirection := range GlobalScenes[GlobalCurrentScene].mapConfig.Directions {
+				lookMessages = append(lookMessages,
+					direction+": "+GlobalScenes[sceneInDirection].mapConfig.Look)
+			}
+			globalNarrator.setTextLetterByLetter(strings.Join(lookMessages, "\n"), s)
+		} else {
+			globalNarrator.setTextLetterByLetter(GlobalScenes[sceneName].mapConfig.Look, s)
+		}
 	}
 }
 
@@ -159,7 +182,7 @@ func (s *Scene) handlePlayerCommand(playerInput string) {
 
 	playerWords := strings.Split(playerInput, ` `)
 
-	if len(playerWords[0]) > 0 && playerWords[0] == `go` {
+	if len(playerWords[0]) > 0 && (playerWords[0] == `go` || playerWords[0] == `look`) {
 		s.handleSpecialPlayerCommands(playerWords)
 		return
 	}
@@ -176,7 +199,7 @@ func (s *Scene) handlePlayerCommand(playerInput string) {
 				s.executeScriptFromQueue()
 			} else {
 				executeAmbienceCommands(s.script.keywordResponseMap[keyword][0].ambienceCmdSlice)
-				narrator.setTextLetterByLetter(s.script.keywordResponseMap[keyword][0].narratorTextLine, s)
+				globalNarrator.setTextLetterByLetter(s.script.keywordResponseMap[keyword][0].narratorTextLine, s)
 			}
 		}
 	}
@@ -195,13 +218,13 @@ func (s *Scene) executeScriptFromQueue() {
 
 	// Set narrator text
 	if len(s.script.responseQueue) > 0 {
-		narrator.setTextLetterByLetter(s.script.responseQueue[0].narratorTextLine, s)
+		globalNarrator.setTextLetterByLetter(s.script.responseQueue[0].narratorTextLine, s)
 		s.script.responseQueue = s.script.responseQueue[1:]
 		return
 	}
 
-	playerInput := player.currentTextString
-	player.setText("")
+	playerInput := globalPlayer.currentTextString
+	globalPlayer.setText("")
 
 	s.handlePlayerCommand(playerInput)
 }
