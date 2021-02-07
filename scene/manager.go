@@ -15,14 +15,14 @@ import (
 // ScenesDir publishes the directory where its files are stored
 const ScenesDir = `../scene/`
 
-// ScenesMap maps scene identifiers (e.g. 'Beach') to their respective scene object
-var ScenesMap map[string]*Scene
+// GlobalScenes maps scene identifiers (e.g. 'Beach') to their respective scene object
+var GlobalScenes map[string]*Scene
 
-// CurrentScene holds the game's state, which can be a scene name like 'Beach' or a state like 'Quit' or 'Pause'.
-var CurrentScene string
+// GlobalCurrentScene holds the game's state, which can be a scene name like 'Beach' or a state like 'Quit' or 'Pause'.
+var GlobalCurrentScene string
 
-// previousScene is used to determine a scene switch for calculating the number of times a scene has been visited
-var previousScene string
+// globalPreviousScene is used to determine a scene switch for calculating the number of times a scene has been visited
+var globalPreviousScene string
 
 // MapConfig contains key/value-pairs for a scene that are intended to save
 // * which scenes are adjacent to the current one
@@ -43,7 +43,7 @@ func (s *Scene) loadMapConfig(filename string) {
 	json.Unmarshal(jsonBytes, &s.mapConfig)
 }
 
-// LoadFilesToSceneMap fills the global variable 'ScenesMap' with filepaths and contents.
+// LoadFilesToSceneMap fills the global variable 'GlobalScenes' with filepaths and contents.
 //
 // The file format is 'scene<sceneName>.<fileExtension>':
 // - JSON files contain the map config
@@ -53,7 +53,7 @@ func (s *Scene) loadMapConfig(filename string) {
 //
 // For some scenes special init functions are called (e.g. for the 'Demo' scene).
 func LoadFilesToSceneMap() {
-	ScenesMap = make(map[string]*Scene)
+	GlobalScenes = make(map[string]*Scene)
 
 	sceneFileSlice, err := ioutil.ReadDir(ScenesDir)
 	if err != nil {
@@ -68,22 +68,22 @@ func LoadFilesToSceneMap() {
 			fileScene := fileMatchSlice[1]
 			fileExtension := fileMatchSlice[2]
 
-			if ScenesMap[fileScene] == nil {
-				ScenesMap[fileScene] = getSceneObjectWithDefaults()
-				ScenesMap[fileScene].Name = fileScene
+			if GlobalScenes[fileScene] == nil {
+				GlobalScenes[fileScene] = getSceneObjectWithDefaults()
+				GlobalScenes[fileScene].Name = fileScene
 				if fileScene == `Demo` {
-					ScenesMap[`Demo`].initDemo()
+					GlobalScenes[`Demo`].initDemo()
 				} else if fileScene == `MainMenu` {
-					ScenesMap[`MainMenu`].initMainMenu()
+					GlobalScenes[`MainMenu`].initMainMenu()
 				}
 			}
 
 			if fileExtension == `md` {
-				ScenesMap[fileScene].script.filePath = filePath
-				ScenesMap[fileScene].script.fileContent = fileio.LoadFileToString(filePath)
+				GlobalScenes[fileScene].script.filePath = filePath
+				GlobalScenes[fileScene].script.fileContent = fileio.LoadFileToString(filePath)
 			} else if fileExtension == `json` {
-				ScenesMap[fileScene].mapConfigPath = filePath
-				ScenesMap[fileScene].loadMapConfig(filePath)
+				GlobalScenes[fileScene].mapConfigPath = filePath
+				GlobalScenes[fileScene].loadMapConfig(filePath)
 			}
 		}
 	}

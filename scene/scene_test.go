@@ -6,10 +6,10 @@ import (
 
 func TestLoadFilesToSceneMap(t *testing.T) {
 	LoadFilesToSceneMap()
-	if len(ScenesMap) == 0 {
-		t.Errorf("scenesMap is empty")
+	if len(GlobalScenes) == 0 {
+		t.Errorf("GlobalScenes is empty")
 	}
-	for sceneName, sceneObj := range ScenesMap {
+	for sceneName, sceneObj := range GlobalScenes {
 		if sceneName == `Void` {
 			continue
 		}

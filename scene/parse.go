@@ -138,20 +138,20 @@ func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
 	// TODO: Implement the 'go' verb first to visit other maps
 	// This entails the handling of the script progress and queues!
 	if len(playerWords) < 2 {
-		narrator.setTextLetterByLetter("Specify your command in the format: '[verb] [object]'", s)
+		globalNarrator.setTextLetterByLetter("Specify your command in the format: '[verb] [object]'", s)
 		return
 	}
 	verb := playerWords[0]
 	object := playerWords[1]
 	switch verb {
 	case `go`:
-		if ScenesMap[object] == nil {
-			narrator.setTextLetterByLetter("You can't go to "+object+"!", s)
+		if GlobalScenes[object] == nil {
+			globalNarrator.setTextLetterByLetter("You can't go to "+object+"!", s)
 			return
 		}
 		// To allow parsing of the newly selected current script file (see 'scene.OnUpdate')
 		s.script.keywordResponseMap = nil
-		CurrentScene = object
+		GlobalCurrentScene = object
 	}
 }
 
@@ -176,7 +176,7 @@ func (s *Scene) handlePlayerCommand(playerInput string) {
 				s.executeScriptFromQueue()
 			} else {
 				executeAmbienceCommands(s.script.keywordResponseMap[keyword][0].ambienceCmdSlice)
-				narrator.setTextLetterByLetter(s.script.keywordResponseMap[keyword][0].narratorTextLine, s)
+				globalNarrator.setTextLetterByLetter(s.script.keywordResponseMap[keyword][0].narratorTextLine, s)
 			}
 		}
 	}
@@ -195,13 +195,13 @@ func (s *Scene) executeScriptFromQueue() {
 
 	// Set narrator text
 	if len(s.script.responseQueue) > 0 {
-		narrator.setTextLetterByLetter(s.script.responseQueue[0].narratorTextLine, s)
+		globalNarrator.setTextLetterByLetter(s.script.responseQueue[0].narratorTextLine, s)
 		s.script.responseQueue = s.script.responseQueue[1:]
 		return
 	}
 
-	playerInput := player.currentTextString
-	player.setText("")
+	playerInput := globalPlayer.currentTextString
+	globalPlayer.setText("")
 
 	s.handlePlayerCommand(playerInput)
 }

@@ -18,7 +18,7 @@ type mainMenuItem struct {
 	State     string
 }
 
-var menuItems = []*mainMenuItem{
+var globalMenuItems = []*mainMenuItem{
 	{"Demo", "Demo", "selected"},
 	{"Start", "Beach", "unselected"},
 	{"Quit", "Quit", "unselected"},
@@ -30,8 +30,8 @@ func (s *Scene) initMainMenu() {
 }
 
 func returnMenuTexts(atlasRegular, atlasBold *text.Atlas) []*text.Text {
-	menuTexts := make([]*text.Text, len(menuItems))
-	for i, menuItem := range menuItems {
+	menuTexts := make([]*text.Text, len(globalMenuItems))
+	for i, menuItem := range globalMenuItems {
 		txt := text.New(pixel.ZV, atlasRegular)
 		if menuItem.State == "selected" {
 			txt = text.New(pixel.ZV, atlasBold)
@@ -65,28 +65,28 @@ func (s *Scene) drawMainMenu(win *pixelgl.Window) {
 func (s *Scene) onUpdateMainMenu(win *pixelgl.Window) {
 
 	if win.JustPressed(pixelgl.KeyDown) {
-		for i, menuItem := range menuItems {
-			if menuItem.State == "selected" && i < len(menuItems)-1 {
+		for i, menuItem := range globalMenuItems {
+			if menuItem.State == "selected" && i < len(globalMenuItems)-1 {
 				menuItem.State = "unselected"
-				menuItems[i+1].State = "selected"
+				globalMenuItems[i+1].State = "selected"
 				break
 			}
 		}
 	}
 	if win.JustPressed(pixelgl.KeyUp) {
-		for i, menuItem := range menuItems {
+		for i, menuItem := range globalMenuItems {
 			if menuItem.State == "selected" && i > 0 {
 				menuItem.State = "unselected"
-				menuItems[i-1].State = "selected"
+				globalMenuItems[i-1].State = "selected"
 				break
 			}
 		}
 	}
 
 	if win.JustPressed(pixelgl.KeyEnter) {
-		for _, menuItem := range menuItems {
+		for _, menuItem := range globalMenuItems {
 			if menuItem.State == "selected" {
-				CurrentScene = menuItem.sceneName
+				GlobalCurrentScene = menuItem.sceneName
 			}
 		}
 	}

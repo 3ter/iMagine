@@ -17,13 +17,6 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-var (
-	//DemoScene contains samples of all core functionalities
-	DemoScene Scene
-
-	isMusicPlaying = false
-)
-
 // initDemo loads all demo specific assets for the scene
 func (s *Scene) initDemo() {
 
@@ -58,14 +51,14 @@ func (s *Scene) onUpdateDemo(win *pixelgl.Window) {
 	if s.IsSceneSwitch {
 		s.writeDemoText()
 	}
-	s.IsSceneSwitch = (previousScene != CurrentScene)
-	previousScene = CurrentScene
+	s.IsSceneSwitch = (globalPreviousScene != GlobalCurrentScene)
+	globalPreviousScene = GlobalCurrentScene
 
 	if win.Pressed(pixelgl.KeyLeftControl) && win.JustPressed(pixelgl.KeyQ) {
 		win.SetClosed(true)
 	}
 	if win.JustPressed(pixelgl.KeyEscape) {
-		CurrentScene = "MainMenu"
+		GlobalCurrentScene = "MainMenu"
 		return
 	}
 
