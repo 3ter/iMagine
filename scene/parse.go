@@ -157,13 +157,16 @@ func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
 	switch verb {
 	case `go`:
 		sceneName := translateDirectionToSceneName(object)
-		if GlobalScenes[sceneName] == nil {
+		if GlobalScenes[sceneName] == nil || sceneName == `Void` {
 			globalNarrator.setTextLetterByLetter("You can't go to '"+sceneName+"'! (Enter a direction: e.g. North)", s)
 			return
 		}
 		// To allow parsing of the newly selected current script file (see 'scene.OnUpdate')
 		s.script.keywordResponseMap = nil
 		GlobalCurrentScene = sceneName
+	case `look`:
+		sceneName := translateDirectionToSceneName(object)
+		globalNarrator.setTextLetterByLetter(GlobalScenes[sceneName].mapConfig.Look, s)
 	}
 }
 
@@ -171,7 +174,7 @@ func (s *Scene) handlePlayerCommand(playerInput string) {
 
 	playerWords := strings.Split(playerInput, ` `)
 
-	if len(playerWords[0]) > 0 && playerWords[0] == `go` {
+	if len(playerWords[0]) > 0 && (playerWords[0] == `go` || playerWords[0] == `look`) {
 		s.handleSpecialPlayerCommands(playerWords)
 		return
 	}
