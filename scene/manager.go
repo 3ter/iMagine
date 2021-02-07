@@ -28,11 +28,9 @@ var globalPreviousScene string
 // * which scenes are adjacent to the current one
 // * the state of the scene
 type MapConfig struct {
-	North string
-	East  string
-	South string
-	West  string
-	Look  string
+	// Directions maps north, east, south and west to their respective scene names
+	Directions map[string]string
+	Look       string
 	// Number of times this scene has been entered
 	Visited int
 }
@@ -41,6 +39,12 @@ func (s *Scene) loadMapConfig(filename string) {
 	jsonBytes := fileio.LoadFileToBytes(filename)
 
 	json.Unmarshal(jsonBytes, &s.mapConfig)
+}
+
+// isTestFile is a helper to skip go test files when looking for scene files
+func isTestFile(filename string) bool {
+	matchTestFile := regexp.MustCompile(`_test.go$`)
+	return matchTestFile.MatchString(filename)
 }
 
 // LoadFilesToSceneMap fills the global variable 'GlobalScenes' with filepaths and contents.
@@ -60,6 +64,9 @@ func LoadFilesToSceneMap() {
 		panic("Scenes directory '" + ScenesDir + "' couldn't be read!")
 	}
 	for _, sceneFile := range sceneFileSlice {
+		if isTestFile(sceneFile.Name()) {
+			continue
+		}
 		sceneFileFilter := regexp.MustCompile(`^scene(\w+)\.(md|json|go)$`)
 
 		fileMatchSlice := sceneFileFilter.FindStringSubmatch(sceneFile.Name())

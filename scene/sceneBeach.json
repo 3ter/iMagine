@@ -1,7 +1,9 @@
 {
-    "north": "Forest",
-    "east": "Mountain",
-    "south": "Sea",
-    "west": "Desert",
+    "directions": {
+        "north": "Forest",
+        "east": "Mountain",
+        "south": "Sea",
+        "west": "Desert"
+    },
     "look": "You see a beautiful beach full of jellyfish."
 }

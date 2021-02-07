@@ -70,7 +70,7 @@ type Scene struct {
 	script        Script
 	progress      string
 	mapConfigPath string
-	mapConfig     MapConfig
+	mapConfig     *MapConfig
 }
 
 // Script groups all info from the (markdown) script to make it available to functions within a scene

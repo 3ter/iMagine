@@ -133,25 +133,37 @@ func executeAmbienceCommands(ambienceCmdSlice []string) {
 	}
 }
 
+// translateDirectionToSceneName uses the Directions map from mapConfig to return the sceneName
+//
+// It defaults back to returning the original string in case there was no direction matching the string
+// e.g. Directions[`foobar`] -> no direction with foobar so print out foobar's  not a valid direction
+func translateDirectionToSceneName(direction string) string {
+
+	sceneName := GlobalScenes[GlobalCurrentScene].mapConfig.Directions[direction]
+	if sceneName == `` {
+		return direction
+	}
+	return sceneName
+}
+
 func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
 
-	// TODO: Implement the 'go' verb first to visit other maps
-	// This entails the handling of the script progress and queues!
 	if len(playerWords) < 2 {
 		globalNarrator.setTextLetterByLetter("Specify your command in the format: '[verb] [object]'", s)
 		return
 	}
-	verb := playerWords[0]
-	object := playerWords[1]
+	verb := strings.ToLower(playerWords[0])
+	object := strings.ToLower(playerWords[1])
 	switch verb {
 	case `go`:
-		if GlobalScenes[object] == nil {
-			globalNarrator.setTextLetterByLetter("You can't go to "+object+"!", s)
+		sceneName := translateDirectionToSceneName(object)
+		if GlobalScenes[sceneName] == nil {
+			globalNarrator.setTextLetterByLetter("You can't go to '"+sceneName+"'! (Enter a direction: e.g. North)", s)
 			return
 		}
 		// To allow parsing of the newly selected current script file (see 'scene.OnUpdate')
 		s.script.keywordResponseMap = nil
-		GlobalCurrentScene = object
+		GlobalCurrentScene = sceneName
 	}
 }
 

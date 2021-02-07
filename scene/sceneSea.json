@@ -1,7 +1,9 @@
 {
-    "north": "Beach",
-    "east": "Void",
-    "south": "Void",
-    "west": "Void",
+    "directions": {
+        "north": "Beach",
+        "east": "Void",
+        "south": "Void",
+        "west": "Void"
+    },
     "look": "And you thought there were lots of jellyfish on that beach..."
 }
