@@ -1,0 +1,9 @@
+{
+    "directions": {
+        "north": "Void",
+        "east": "Void",
+        "south": "Void",
+        "west": "Beach"
+    },
+    "look": "The rocks seem invitingly soft."
+}

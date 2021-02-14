@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/3ter/iMagine/internal/fileio"
+	"github.com/3ter/iMagine/fileio"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
@@ -183,9 +183,9 @@ func (n *Narrator) convertMarkdownStringToTextObjectsInBox(str string, scn *Scen
 
 		char := string(rune)
 		switch char {
-		case `\n`:
+		case "\n":
 			// align at left indent and remove one line height to the current Y Position
-			currentOrig = currentOrig.Add(pixel.V(leftIndent-currentOrig.X, -n.currentTextObjects[idx].LineHeight))
+			currentOrig = currentOrig.Add(pixel.V(leftIndent-currentOrig.X, -n.currentTextObjects[idx-1].LineHeight))
 		case ` `:
 			nextWord = nextWordRegexp.FindString(str[(idx + 1):])
 		}
@@ -240,11 +240,16 @@ func (n *Narrator) setTextRangeColor(col color.Color, indexStart, indexEnd int) 
 
 func (n *Narrator) graduallyRevealText(scn *Scene) {
 
-	scn.isPreventInput = true
+	scn.isPreventInput.Lock()
+	defer scn.isPreventInput.Unlock()
+	scn.isPreventInput.value = true
 
 	sleepTime := 0
 	for _, textObj := range n.currentTextObjects {
 		textObj.isRevealed = true
+		if scn.isImmediateReveal.value {
+			continue
+		}
 
 		sleepTime = 0
 		if textObj.textSpeed != 0 {
@@ -253,7 +258,10 @@ func (n *Narrator) graduallyRevealText(scn *Scene) {
 		time.Sleep(time.Duration(sleepTime) * time.Millisecond)
 	}
 
-	scn.isPreventInput = false
+	scn.isImmediateReveal.Lock()
+	scn.isImmediateReveal.value = false
+	scn.isImmediateReveal.Unlock()
+	scn.isPreventInput.value = false
 }
 
 // setText accepts a string with potential markdown formatting containing HTML with inline CSS for text formatting.

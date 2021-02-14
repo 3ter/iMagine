@@ -27,6 +27,21 @@ func LoadFileToString(filename string) string {
 	return string(b)
 }
 
+// LoadFileToBytes loads the contents of a file to a bytes array or dies
+func LoadFileToBytes(filename string) []byte {
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return b
+}
+
 // LoadTTF has been taken from the pixel Wiki
 func LoadTTF(path string, size float64) (font.Face, error) {
 	file, err := os.Open(path)

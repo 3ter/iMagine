@@ -1,0 +1,9 @@
+{
+    "directions": {
+        "north": "Void",
+        "east": "Beach",
+        "south": "Void",
+        "west": "Void"
+    },
+    "look": "The amount of sand grains is tantalizing!"
+}
