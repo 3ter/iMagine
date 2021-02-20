@@ -47,7 +47,6 @@ func (s *Scene) loadObject(filename string, objectName string) {
 	var objectData map[string]interface{}
 	json.Unmarshal(jsonBytes, &objectData)
 
-	s.objects = make(map[string]map[string]interface{})
 	s.objects[objectName] = objectData
 
 	// TODO: I have no complete concept of how to deal with the unstructured data I've got here now.
@@ -97,6 +96,7 @@ func LoadFilesToSceneMap() {
 
 		sceneName := contentFolder.Name()
 		buildSceneFromFolder(sceneName)
+		GlobalScenes[sceneName].objects = make(map[string]map[string]interface{})
 
 		contentFiles, err := ioutil.ReadDir(ContentDir + contentFolder.Name())
 		if err != nil {
