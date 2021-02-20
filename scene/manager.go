@@ -63,11 +63,13 @@ func buildSceneFromFolder(foldername string) {
 
 // LoadFilesToSceneMap fills the global variable 'GlobalScenes' with filepaths and contents.
 //
-// The file format is 'scene<sceneName>.<fileExtension>':
+// Every file for a scene has its own directory named with the scene name (its identifier throughout the game).
+// The files can be 'script.md', 'mapConfig.json' or '<objectName>.json' (not yet implemented):
 // - JSON files contain the map config
 // - MD files contain the scene's script
-// - GO files contain special functions which don't fit in the generic 'OnUpdate' handling
-//		- For '.go' files there will be an entry in the 'SceneMap' with default values
+//
+// GO files are outside this structure and contain special functions which don't fit in the generic 'OnUpdate' handling.
+// For empty folders there will be an entry in the 'SceneMap' with default values.
 //
 // For some scenes special init functions are called (e.g. for the 'Demo' scene).
 func LoadFilesToSceneMap() {
