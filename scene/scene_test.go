@@ -25,5 +25,12 @@ func TestLoadFilesToSceneMap(t *testing.T) {
 		if sceneObj.mapConfig != nil && !directionsHasNorth {
 			t.Fatalf("The scene '" + sceneName + "' has no valid direction for 'north'")
 		}
+
+		if sceneName == `Beach` {
+			_, hasKey := sceneObj.objects[`cupboardKey`]
+			if !hasKey {
+				t.Fatalf("The Beach scene doesn't have an object named 'cupboardKey'")
+			}
+		}
 	}
 }

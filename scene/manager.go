@@ -41,6 +41,20 @@ func (s *Scene) loadMapConfig(filename string) {
 	json.Unmarshal(jsonBytes, &s.mapConfig)
 }
 
+func (s *Scene) loadObject(filename string, objectName string) {
+	jsonBytes := fileio.LoadFileToBytes(filename)
+
+	var objectData map[string]interface{}
+	json.Unmarshal(jsonBytes, &objectData)
+
+	s.objects = make(map[string]map[string]interface{})
+	s.objects[objectName] = objectData
+
+	// TODO: I have no complete concept of how to deal with the unstructured data I've got here now.
+	// Data needs to be cast: s.objects[objectName][`id`].(string)
+	// I suppose we need to try and access certain keys in the map and determine the actions from there.
+}
+
 // isTestFile is a helper to skip go test files when looking for scene files
 func isTestFile(filename string) bool {
 	matchTestFile := regexp.MustCompile(`_test.go$`)
@@ -107,6 +121,8 @@ func LoadFilesToSceneMap() {
 				} else if fileName == `mapConfig` && fileExtension == `json` {
 					GlobalScenes[sceneName].mapConfigPath = filePath
 					GlobalScenes[sceneName].loadMapConfig(filePath)
+				} else {
+					GlobalScenes[sceneName].loadObject(filePath, fileName)
 				}
 			}
 		}
