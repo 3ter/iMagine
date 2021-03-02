@@ -78,12 +78,25 @@ type markdownCommand struct {
 	attributeValueMap map[string]string
 }
 
+func stripMarkdownComments(str string) string {
+
+	// flag 's' to let '.' match '\n' as well (see https://golang.org/pkg/regexp/syntax/)
+	matchMarkdownComments := regexp.MustCompile(`(?s)\<!--.*?--\>`)
+
+	return matchMarkdownComments.ReplaceAllString(str, ``)
+}
+
+// getMarkdownCommandSliceFromString reads in HTML like tags and returns markdown command slices together with a
+// HTML stripped string.
+//
 // I don't do markdown error checking here (e.g. same number of opening/closing brackets) because it is expected
 // to be seen in the markdown preview in an editor.
 func getMarkdownCommandSliceFromString(str string) ([]markdownCommand, string) {
 
 	var markdownCommandSlice []markdownCommand
 	var strippedStr string
+
+	str = stripMarkdownComments(str)
 
 	htmlOpenRegexp := regexp.MustCompile(`\<([^\/].+?)\>`)
 	htmlCloseRegexp := regexp.MustCompile(`\<\/\w+\s?\>`)
