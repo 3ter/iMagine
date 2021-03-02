@@ -81,7 +81,7 @@ type markdownCommand struct {
 func stripMarkdownComments(str string) string {
 
 	// flag 's' to let '.' match '\n' as well (see https://golang.org/pkg/regexp/syntax/)
-	matchMarkdownComments := regexp.MustCompile(`(?s)\<!--.*?--\>`)
+	matchMarkdownComments := regexp.MustCompile(`(?s)<!--.*?-->`)
 
 	return matchMarkdownComments.ReplaceAllString(str, ``)
 }

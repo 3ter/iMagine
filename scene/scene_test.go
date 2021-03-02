@@ -40,13 +40,17 @@ func TestRemoveMarkdownComments(t *testing.T) {
 		`<span style="color:Red; font-size:16px;">eyes</span>.
 		<!-- This is a great comment. -->
 
-		Text foobar embedded hey!<!-- This is a multiline comment embedded into text. -->Mark it down baby!!!
+		Text foobar embedded hey!<!-- This is a multiline comment
+
+		embedded into text. -->Mark it down baby!!!
 
 	You find yourself at a beach. <span style="text-speed:2000">You hear the waves come and go </span>, the ` +
 		`<span style="color:red">red</span> sunset reflects on the <span style="color:blue">water’s</span> surface.`
 
 	replacedStringLength := len(`<!-- This is a great comment. -->` +
-		`<!-- This is a multiline comment embedded into text. -->`)
+		`<!-- This is a multiline comment
+
+		embedded into text. -->`)
 
 	strippedString := stripMarkdownComments(testString)
 	if len(testString)-replacedStringLength != len(strippedString) {
