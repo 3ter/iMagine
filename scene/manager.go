@@ -15,6 +15,8 @@ import (
 // ContentDir publishes the directory where its files are stored
 const ContentDir = `../scene/content/`
 
+var specialScenes = [2]string{`Demo`, `MainMenu`}
+
 // GlobalScenes maps scene identifiers (e.g. 'Beach') to their respective scene object
 var GlobalScenes map[string]*Scene
 
@@ -66,10 +68,21 @@ func buildSceneFromFolder(foldername string) {
 	if GlobalScenes[sceneName] == nil {
 		GlobalScenes[sceneName] = getSceneObjectWithDefaults()
 		GlobalScenes[sceneName].Name = sceneName
-		if sceneName == `Demo` {
-			GlobalScenes[`Demo`].initDemo()
-		} else if sceneName == `MainMenu` {
-			GlobalScenes[`MainMenu`].initMainMenu()
+	}
+}
+
+func addSpecialScenes() {
+	for _, specialScene := range specialScenes {
+		if GlobalScenes[specialScene] == nil {
+			GlobalScenes[specialScene] = getSceneObjectWithDefaults()
+			GlobalScenes[specialScene].Name = specialScene
+			if specialScene == `Demo` {
+				GlobalScenes[`Demo`].initDemo()
+			} else if specialScene == `MainMenu` {
+				GlobalScenes[`MainMenu`].initMainMenu()
+			}
+		} else {
+			panic("Scene with name " + specialScene + " has been overwritten!")
 		}
 	}
 }
@@ -127,4 +140,5 @@ func LoadFilesToSceneMap() {
 			}
 		}
 	}
+	addSpecialScenes()
 }
