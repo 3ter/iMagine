@@ -158,13 +158,17 @@ func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
 	switch verb {
 	case `go`:
 		if GlobalScenes[sceneName] == nil || sceneName == `Void` {
-			globalNarrator.setTextLetterByLetter("You can't go to '"+sceneName+"'! (Enter a direction: e.g. North)", s)
+			globalNarrator.setTextLetterByLetter("You can't go to '"+object+"'! (Enter a direction: e.g. North)", s)
 			return
 		}
 		// To allow parsing of the newly selected current script file (see 'scene.OnUpdate')
 		s.script.keywordResponseMap = nil
 		GlobalCurrentScene = sceneName
 	case `look`:
+		if GlobalScenes[sceneName] == nil || sceneName == `Void` {
+			globalNarrator.setTextLetterByLetter("You can't look to '"+object+"'! (Enter a direction: e.g. North)", s)
+			return
+		}
 		if sceneName == `around` {
 			var lookMessages []string
 			for direction, sceneInDirection := range GlobalScenes[GlobalCurrentScene].mapConfig.Directions {
