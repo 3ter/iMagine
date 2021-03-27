@@ -12,8 +12,10 @@ import (
 	"github.com/3ter/iMagine/fileio"
 )
 
-// ScenesDir publishes the directory where its files are stored
-const ScenesDir = `../scene/`
+// ContentDir publishes the directory where its files are stored
+const ContentDir = `../scene/content/`
+
+var specialScenes = [2]string{`Demo`, `MainMenu`}
 
 // GlobalScenes maps scene identifiers (e.g. 'Beach') to their respective scene object
 var GlobalScenes map[string]*Scene
@@ -41,57 +43,102 @@ func (s *Scene) loadMapConfig(filename string) {
 	json.Unmarshal(jsonBytes, &s.mapConfig)
 }
 
+func (s *Scene) loadObject(filename string, objectName string) {
+	jsonBytes := fileio.LoadFileToBytes(filename)
+
+	var objectData map[string]interface{}
+	json.Unmarshal(jsonBytes, &objectData)
+
+	s.objects[objectName] = objectData
+
+	// TODO: I have no complete concept of how to deal with the unstructured data I've got here now.
+	// Data needs to be cast: s.objects[objectName][`id`].(string)
+	// I suppose we need to try and access certain keys in the map and determine the actions from there.
+}
+
 // isTestFile is a helper to skip go test files when looking for scene files
 func isTestFile(filename string) bool {
 	matchTestFile := regexp.MustCompile(`_test.go$`)
 	return matchTestFile.MatchString(filename)
 }
 
+func buildSceneFromFolder(foldername string) {
+	sceneName := foldername
+
+	if GlobalScenes[sceneName] == nil {
+		GlobalScenes[sceneName] = getSceneObjectWithDefaults()
+		GlobalScenes[sceneName].Name = sceneName
+	}
+}
+
+func addSpecialScenes() {
+	for _, specialScene := range specialScenes {
+		if GlobalScenes[specialScene] == nil {
+			GlobalScenes[specialScene] = getSceneObjectWithDefaults()
+			GlobalScenes[specialScene].Name = specialScene
+			if specialScene == `Demo` {
+				GlobalScenes[`Demo`].initDemo()
+			} else if specialScene == `MainMenu` {
+				GlobalScenes[`MainMenu`].initMainMenu()
+			}
+		} else {
+			panic("Scene with name " + specialScene + " has been overwritten!")
+		}
+	}
+}
+
 // LoadFilesToSceneMap fills the global variable 'GlobalScenes' with filepaths and contents.
 //
-// The file format is 'scene<sceneName>.<fileExtension>':
+// Every file for a scene has its own directory named with the scene name (its identifier throughout the game).
+// The files can be 'script.md', 'mapConfig.json' or '<objectName>.json' (not yet implemented):
 // - JSON files contain the map config
 // - MD files contain the scene's script
-// - GO files contain special functions which don't fit in the generic 'OnUpdate' handling
-//		- For '.go' files there will be an entry in the 'SceneMap' with default values
+//
+// GO files are outside this structure and contain special functions which don't fit in the generic 'OnUpdate' handling.
+// For empty folders there will be an entry in the 'SceneMap' with default values.
 //
 // For some scenes special init functions are called (e.g. for the 'Demo' scene).
 func LoadFilesToSceneMap() {
 	GlobalScenes = make(map[string]*Scene)
 
-	sceneFileSlice, err := ioutil.ReadDir(ScenesDir)
+	contentFolders, err := ioutil.ReadDir(ContentDir)
 	if err != nil {
-		panic("Scenes directory '" + ScenesDir + "' couldn't be read!")
+		panic("Content directory '" + ContentDir + "' couldn't be read!")
 	}
-	for _, sceneFile := range sceneFileSlice {
-		if isTestFile(sceneFile.Name()) {
-			continue
+	for _, contentFolder := range contentFolders {
+
+		sceneName := contentFolder.Name()
+		buildSceneFromFolder(sceneName)
+		GlobalScenes[sceneName].objects = make(map[string]map[string]interface{})
+
+		contentFiles, err := ioutil.ReadDir(ContentDir + contentFolder.Name())
+		if err != nil {
+			panic("Content directory '" + ContentDir + contentFolder.Name() + "' couldn't be read!")
 		}
-		sceneFileFilter := regexp.MustCompile(`^scene(\w+)\.(md|json|go)$`)
+		for _, contentFile := range contentFiles {
+			if isTestFile(contentFile.Name()) {
+				continue
+			}
 
-		fileMatchSlice := sceneFileFilter.FindStringSubmatch(sceneFile.Name())
-		if len(fileMatchSlice) == 3 {
-			filePath := ScenesDir + fileMatchSlice[0]
-			fileScene := fileMatchSlice[1]
-			fileExtension := fileMatchSlice[2]
+			contentFileFilter := regexp.MustCompile(`^(\w+)\.(md|json)$`)
 
-			if GlobalScenes[fileScene] == nil {
-				GlobalScenes[fileScene] = getSceneObjectWithDefaults()
-				GlobalScenes[fileScene].Name = fileScene
-				if fileScene == `Demo` {
-					GlobalScenes[`Demo`].initDemo()
-				} else if fileScene == `MainMenu` {
-					GlobalScenes[`MainMenu`].initMainMenu()
+			fileMatchSlice := contentFileFilter.FindStringSubmatch(contentFile.Name())
+			if len(fileMatchSlice) == 3 {
+				filePath := ContentDir + sceneName + "/" + fileMatchSlice[0]
+				fileName := fileMatchSlice[1]
+				fileExtension := fileMatchSlice[2]
+
+				if fileName == `script` && fileExtension == `md` {
+					GlobalScenes[sceneName].script.filePath = filePath
+					GlobalScenes[sceneName].script.fileContent = fileio.LoadFileToString(filePath)
+				} else if fileName == `mapConfig` && fileExtension == `json` {
+					GlobalScenes[sceneName].mapConfigPath = filePath
+					GlobalScenes[sceneName].loadMapConfig(filePath)
+				} else {
+					GlobalScenes[sceneName].loadObject(filePath, fileName)
 				}
 			}
-
-			if fileExtension == `md` {
-				GlobalScenes[fileScene].script.filePath = filePath
-				GlobalScenes[fileScene].script.fileContent = fileio.LoadFileToString(filePath)
-			} else if fileExtension == `json` {
-				GlobalScenes[fileScene].mapConfigPath = filePath
-				GlobalScenes[fileScene].loadMapConfig(filePath)
-			}
 		}
 	}
+	addSpecialScenes()
 }

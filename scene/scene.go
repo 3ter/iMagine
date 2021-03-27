@@ -71,6 +71,7 @@ type Scene struct {
 	progress      string
 	mapConfigPath string
 	mapConfig     *MapConfig
+	objects       map[string]map[string]interface{}
 }
 
 // Script groups all info from the (markdown) script to make it available to functions within a scene

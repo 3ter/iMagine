@@ -1,0 +1,24 @@
+{
+    "id": "oldCupboard1",
+    "scene": "Lighthouse",
+    "lock_state": "locked",
+    "actions": {
+        "look": "This appears to be an old cupboard.",
+        "open": {
+            "lock_state=locked": "The door won't budge, it is locked tight.",
+            "lock_state=unlocked": "You open the door of the cupboard and reveal a list of 5 things which are inside. Number 2 will SHOCK you!"
+        }
+    },
+    "conditions": {
+        "keyCupboard1": {
+            "action": "use",
+            "target": "oldCupboard1",
+            "attribute_change": {
+                "target": "oldCupboard1",
+                "attribute": "lock_state",
+                "value": "unlocked"
+            },
+            "message": "The key fits and the door now appears to be unlocked"
+        }
+    }
+}
