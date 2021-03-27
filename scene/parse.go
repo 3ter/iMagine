@@ -146,7 +146,7 @@ func translateDirectionToSceneName(direction string) string {
 	return sceneName
 }
 
-func (s *Scene) handleSpecialPlayerCommands(playerWords []string) {
+func (s *Scene) handleActions(playerWords []string) {
 
 	if len(playerWords) < 2 {
 		globalNarrator.setTextLetterByLetter("Specify your command in the format: '[verb] [object]'", s)
@@ -187,13 +187,13 @@ func (s *Scene) handlePlayerCommand(playerInput string) {
 	playerWords := strings.Split(playerInput, ` `)
 
 	if len(playerWords[0]) > 0 && (playerWords[0] == `go` || playerWords[0] == `look`) {
-		s.handleSpecialPlayerCommands(playerWords)
+		s.handleActions(playerWords)
 		return
 	}
 
 	// Check for progress change
 	for keyword, responseSlice := range s.script.keywordResponseMap {
-		if strings.ToLower(playerInput) == strings.ToLower(keyword) {
+		if strings.EqualFold(playerInput, keyword) {
 			// If there's a progressUpdate then there's only one response in the slice
 			if responseSlice[0].progressUpdate != "" {
 				s.progress = responseSlice[0].progressUpdate
