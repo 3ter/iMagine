@@ -165,10 +165,6 @@ func (s *Scene) handleActions(playerWords []string) {
 		s.script.keywordResponseMap = nil
 		GlobalCurrentScene = sceneName
 	case `look`:
-		if GlobalScenes[sceneName] == nil || sceneName == `Void` {
-			globalNarrator.setTextLetterByLetter("You can't look to '"+object+"'! (Enter a direction: e.g. North)", s)
-			return
-		}
 		if sceneName == `around` {
 			var lookMessages []string
 			for direction, sceneInDirection := range GlobalScenes[GlobalCurrentScene].mapConfig.Directions {
@@ -176,6 +172,9 @@ func (s *Scene) handleActions(playerWords []string) {
 					direction+": "+GlobalScenes[sceneInDirection].mapConfig.Look)
 			}
 			globalNarrator.setTextLetterByLetter(strings.Join(lookMessages, "\n"), s)
+		} else if GlobalScenes[sceneName] == nil {
+			globalNarrator.setTextLetterByLetter("You can't look to '"+object+"'! (Enter a direction: e.g. North)", s)
+			return
 		} else {
 			globalNarrator.setTextLetterByLetter(GlobalScenes[sceneName].mapConfig.Look, s)
 		}
