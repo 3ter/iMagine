@@ -201,8 +201,16 @@ func handleBackspace(win *pixelgl.Window) {
 	}
 }
 
-func (s *Scene) updateHintTexts() {
+func (s *Scene) toggleIsInteractiveUI() {
 	if len(s.script.responseQueue) == 0 && len(s.script.keywordResponseMap) > 0 {
+		globalPlayer.isInteractiveUI = true
+	} else {
+		globalPlayer.isInteractiveUI = false
+	}
+}
+
+func (s *Scene) updateHintTexts() {
+	if globalPlayer.isInteractiveUI {
 		s.playerBoxHint.Clear()
 		s.narratorBoxHint.Clear()
 		s.playerBoxHint.WriteString("Write a command and press Enter.")
@@ -248,8 +256,10 @@ func (s *Scene) OnUpdate(win *pixelgl.Window) {
 		}
 		s.executeScriptFromQueue()
 
+		s.toggleIsInteractiveUI()
 		s.updateHintTexts()
 	}
+	globalPlayer.cycleWordInventory(win)
 
 	if len(s.script.responseQueue) == 0 && len(win.Typed()) > 0 {
 		globalPlayer.addText(win.Typed(), s)
@@ -283,4 +293,8 @@ func (s *Scene) Draw(win *pixelgl.Window, start time.Time) {
 
 	globalPlayer.drawTextInBox(win)
 	globalNarrator.drawTextInBox(win)
+
+	if globalPlayer.isInteractiveUI {
+		globalPlayer.drawWordBank(win)
+	}
 }

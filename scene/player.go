@@ -15,13 +15,20 @@ import (
 	"github.com/3ter/iMagine/fileio"
 )
 
+type WordInventory struct {
+	textObjects []*text.Text
+	// index of the currently displayed word
+	currentIndex int
+}
+
 // Player is defined by its text and contains the game progression in
 // the form of its inventory.
 //
 // Every attributes are private atm so functions to interact with them are
 // expected to be created in this package.
 type Player struct {
-	wordInventory []string
+	wordInventory   WordInventory
+	isInteractiveUI bool
 
 	atlas    *text.Atlas
 	fontFace font.Face
@@ -115,6 +122,52 @@ func (p *Player) drawTextInBox(win *pixelgl.Window) {
 	p.currentTextObjects[0].Draw(win, pixel.IM.Moved(p.textBox.topLeftCorner.Add(marginVec)))
 }
 
+func (p *Player) drawWordBank(win *pixelgl.Window) {
+	wordBankTextBox := new(TextBox)
+
+	wordBankTextBox.dimensions = pixel.V(130, 30)
+	wordBankTextBox.topLeftCorner = pixel.V(1024/2-p.textBox.dimensions.X/2, 768-500+40)
+	wordBankTextBox.thickness = 5
+	wordBankTextBox.margin = 20
+
+	wordBankTextBox.drawTextBox(win)
+
+	marginVec := pixel.V(wordBankTextBox.margin,
+		wordBankTextBox.margin-wordBankTextBox.thickness-1.8*
+			p.wordInventory.textObjects[p.wordInventory.currentIndex].LineHeight)
+
+	p.wordInventory.textObjects[p.wordInventory.currentIndex].Draw(win,
+		pixel.IM.Moved(wordBankTextBox.topLeftCorner.Add(marginVec)))
+}
+
+func (p *Player) initWordInventory(face font.Face, col color.Color) {
+	firstWordObject := text.New(pixel.ZV, text.NewAtlas(face, text.ASCII))
+	firstWordObject.Color = col
+	firstWordObject.WriteString("inspect")
+
+	// FIXME: remove secondWordObject
+	secondWordObject := text.New(pixel.ZV, text.NewAtlas(face, text.ASCII))
+	secondWordObject.Color = col
+	secondWordObject.WriteString("foobar")
+
+	p.wordInventory = WordInventory{currentIndex: 0}
+	// FIXME: remove secondWordObject
+	p.wordInventory.textObjects = append(p.wordInventory.textObjects, firstWordObject, secondWordObject)
+}
+
+func (p *Player) cycleWordInventory(win *pixelgl.Window) {
+	if win.JustPressed(pixelgl.KeyUp) {
+		globalPlayer.wordInventory.currentIndex =
+			(globalPlayer.wordInventory.currentIndex + 1) % len(globalPlayer.wordInventory.textObjects)
+	} else if win.JustPressed(pixelgl.KeyDown) {
+		globalPlayer.wordInventory.currentIndex =
+			(globalPlayer.wordInventory.currentIndex - 1) % len(globalPlayer.wordInventory.textObjects)
+		if globalPlayer.wordInventory.currentIndex < 0 {
+			globalPlayer.wordInventory.currentIndex *= -1
+		}
+	}
+}
+
 // SetDefaultAttributes initializes the Player struct
 func (p *Player) setDefaultAttributes() {
 	face, err := fileio.LoadTTF("../assets/intuitive.ttf", 20)
@@ -134,4 +187,6 @@ func (p *Player) setDefaultAttributes() {
 	p.textBox.topLeftCorner = pixel.V(1024/2-p.textBox.dimensions.X/2, 768-500)
 	p.textBox.thickness = 5
 	p.textBox.margin = 20
+
+	p.initWordInventory(face, colornames.Blueviolet)
 }
