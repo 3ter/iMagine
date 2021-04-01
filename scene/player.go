@@ -122,11 +122,11 @@ func (p *Player) drawTextInBox(win *pixelgl.Window) {
 	p.currentTextObjects[0].Draw(win, pixel.IM.Moved(p.textBox.topLeftCorner.Add(marginVec)))
 }
 
-func (p *Player) drawWordBank(win *pixelgl.Window) {
+func (p *Player) drawWordInventory(win *pixelgl.Window) {
 	wordBankTextBox := new(TextBox)
 
 	wordBankTextBox.dimensions = pixel.V(130, 30)
-	wordBankTextBox.topLeftCorner = pixel.V(1024/2-p.textBox.dimensions.X/2, 768-500+40)
+	wordBankTextBox.topLeftCorner = pixel.V(1024/2-p.textBox.dimensions.X/2, 768-500+50)
 	wordBankTextBox.thickness = 5
 	wordBankTextBox.margin = 20
 
@@ -135,9 +135,23 @@ func (p *Player) drawWordBank(win *pixelgl.Window) {
 	marginVec := pixel.V(wordBankTextBox.margin,
 		wordBankTextBox.margin-wordBankTextBox.thickness-1.8*
 			p.wordInventory.textObjects[p.wordInventory.currentIndex].LineHeight)
-
 	p.wordInventory.textObjects[p.wordInventory.currentIndex].Draw(win,
 		pixel.IM.Moved(wordBankTextBox.topLeftCorner.Add(marginVec)))
+
+	upArrowPic, err := fileio.LoadPicture(`../assets/kb_up_arrow.png`)
+	if err != nil {
+		panic(err)
+	}
+	downArrowPic, err := fileio.LoadPicture(`../assets/kb_down_arrow.png`)
+	if err != nil {
+		panic(err)
+	}
+	upArrowSprite := pixel.NewSprite(upArrowPic, upArrowPic.Bounds())
+	downArrowSprite := pixel.NewSprite(downArrowPic, downArrowPic.Bounds())
+	spriteMatrix := pixel.IM.Scaled(pixel.ZV, 0.2)
+	spriteMatrix = spriteMatrix.Moved(wordBankTextBox.topLeftCorner.Add(marginVec).Add(pixel.V(wordBankTextBox.dimensions.X, 0)))
+	upArrowSprite.Draw(win, spriteMatrix.Moved(pixel.V(0, 17)))
+	downArrowSprite.Draw(win, spriteMatrix.Moved(pixel.V(0, -7)))
 }
 
 func (p *Player) initWordInventory(face font.Face, col color.Color) {

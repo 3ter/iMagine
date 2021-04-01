@@ -295,6 +295,6 @@ func (s *Scene) Draw(win *pixelgl.Window, start time.Time) {
 	globalNarrator.drawTextInBox(win)
 
 	if globalPlayer.isInteractiveUI {
-		globalPlayer.drawWordBank(win)
+		globalPlayer.drawWordInventory(win)
 	}
 }
