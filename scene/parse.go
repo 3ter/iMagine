@@ -128,6 +128,7 @@ func executeAmbienceCommands(ambienceCmdSlice []string) {
 			audioFileRegexp := regexp.MustCompile(`^Audio:\s?(\S+)`)
 			audioFilename := audioFileRegexp.FindStringSubmatch(ambienceCmd)[1]
 			var streamer = fileio.GetStreamer("../assets/" + audioFilename)
+			//TODO: reference audioplayer
 			speaker.Play(streamer)
 		}
 	}

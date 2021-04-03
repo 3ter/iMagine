@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"regexp"
 
+	"github.com/3ter/iMagine/controlaudio"
 	"github.com/3ter/iMagine/fileio"
 )
 
@@ -25,6 +26,9 @@ var GlobalCurrentScene string
 
 // globalPreviousScene is used to determine a scene switch for calculating the number of times a scene has been visited
 var globalPreviousScene string
+
+//TODO: instantiate audioplayer
+var GlobalAudioPlayer controlaudio.AudioPlayer
 
 // MapConfig contains key/value-pairs for a scene that are intended to save
 // * which scenes are adjacent to the current one

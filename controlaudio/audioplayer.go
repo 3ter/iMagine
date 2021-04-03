@@ -19,6 +19,18 @@ func (a *AudioPlayer) loadTrack(trackName string) {
 	a.trackMap[trackName] = fileio.GetStreamer(trackPath)
 }
 
+func (a *AudioPlayer) playAllTracks() {
+
+}
+
+func (a *AudioPlayer) trackVolUp(trackName string) {
+
+}
+
+func (a *AudioPlayer) trackVolDown(trackName string) {
+
+}
+
 func (a *AudioPlayer) initAudioPlayer(path string) {
 	a.trackDir = path
 	a.trackMap = make(map[string]*effects.Volume)
