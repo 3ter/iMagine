@@ -1,0 +1,12 @@
+{
+    "exits": {
+        "door": "sandboxMultiTwo"
+    },
+    "look": "An empty room with a chair you sat on."
+}
+
+if $roomcount == 1
+"You are sitting on a chair in an empty room. There's a door which seems open."
+else
+"You are back in the room you started in."
+fi

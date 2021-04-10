@@ -1,0 +1,9 @@
+{
+	"directions": {
+		"north":"forest",
+		"west":"gravel",
+		"east":"mountain",
+		"south":"theSea"
+	},
+	"look":"You are looking back at the place where you awoke. While it feels like going back, you don’t know where to go from there. You are not sure if you want to go back."
+}

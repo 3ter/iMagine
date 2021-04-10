@@ -1,0 +1,11 @@
+{
+    "exits": {
+        "door": "sandboxMultiOne",
+        "trapdoor":"sandboxMultiThree"
+    },
+    "look": "A nice room with some plants."
+}
+
+You are in a room whith three pots of plants in it. It's nice!
+
+On the left wall, there is an open door. On the floor, you spot a trapdoor.
